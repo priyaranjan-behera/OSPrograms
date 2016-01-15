@@ -9,6 +9,10 @@ int thread_id;
 
 void *thread_func(void *arg)
 {
+    int k;
+    pthread_yield();
+
+    
     thread_info *data = (thread_info*) arg;
     int i = 0;
     while(i < 100)
@@ -31,7 +35,7 @@ int main(int argc, char **argv)
         return 1;
     }
     
-    pthread_join(threads[0], NULL);
+
     
     int i = 0;
     
@@ -40,6 +44,8 @@ int main(int argc, char **argv)
         printf("Hello from main %d\n", i);
         i++;
     }
+    
+    pthread_join(threads[0], NULL);
     
     return 0;
 }
