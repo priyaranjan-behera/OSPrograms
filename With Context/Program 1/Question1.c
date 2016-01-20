@@ -14,47 +14,52 @@ int count = 0;
 
 MyThread thread;
 
+
+
 typedef struct node {
     ucontext_t context;
     int id;
     struct node * next;
     struct node * prev;
-    struct node * child;
-
+    int parent;
+    int blockedFor[10];
 } node;
 
-node* head = NULL;
-node* cur = NULL;
+node* ready_queue = NULL;
+node* blocked_queue = NULL;
 
-node* getNewNode()
+node child1, child2;
+
+node* insertNode(node* head)
 {
-	node* ret;
-	if (head == NULL)
+	node* trav;
+	trav = head;
+	if(head == NULL)
 	{
 		head = malloc(sizeof(node));
-		ret = head;
+		return head;
 	}
 	else
 	{
-		node* trav = head;
 		while(trav->next != NULL)
-		{
-			trav = trav->next;
-			printf("Traversing");
-		}	
+			trav = trav-> next;
+
 		trav->next = malloc(sizeof(node));
-		ret = trav->next;
-		ret->prev = trav;
-		printf("Prev set");
-		
+		trav->next->prev = trav;
+		return trav->next;
 	}
-	
-	return ret;
 
 }
 
+node* moveNextNode(node *head)
+{
+	head = head->next;
+	head->prev = NULL;
+}
 
-node child1, child2;
+
+
+
 
 int fn1()
 {
@@ -67,53 +72,45 @@ void fn2()
 }
 node MyThreadCreate (void(*start_funct)(void *), void *args)
 {
-	node* child = getNewNode();
+	node* child = insertNode(ready_queue);
+	ucontext_t current;
 	getcontext(&(child->context));
+	getcontext(&current);
 	child->context.uc_stack.ss_sp=malloc(MEM);
  	child->context.uc_stack.ss_size=MEM;
  	child->context.uc_stack.ss_flags=0;
 	child->id = count++;
-	if (child-> prev != NULL)
-	{
-		thread.context.uc_link=&(child->prev->context);
-		printf("The Previous Context is Initialized\n");
-		printf("Present Id = %d ", child->id);
-		printf("Previous Context Id: %d \n", child->prev->id);
-	} 	
-	
- 	makecontext(&(child->context), (void*)start_funct, args);
+	child->parent = ready_queue->id;
+	child->context.uc_link=&(child->prev->context);
+	makecontext(&(child->context), (void*)start_funct, args);
 	return *child;
 }
 
-void MyThreadYield(void)
-{
-	setcontext(&next);
-}
 
 
 
 int main(int argc, char *argv[])
 {
-	head = malloc(sizeof(node)); 
-	head->id = count++;
- 	getcontext(&(head->context));
-
+    printf("CP1");
 	child2 = MyThreadCreate((void*)fn2, NULL);
+	printf("CP2");
 	child1 = MyThreadCreate((void*)fn1, NULL);
-	
+
 	printf("Printing the entire list: ");
-	node* test = head;
+
+	node* test = ready_queue;
 	while (test->next != NULL)
 	{
 		printf("\nId: %d", test->id);
-		test = test->next;	
+		test = test->next;
 	}
 
 	while (test != NULL)
 	{
 		printf("\nId: %d", test->id);
-		test = test->prev;	
+		test = test->prev;
 	}
+
 	swapcontext(&next, &child1.context);
  	printf("completed\n");
  	exit(0);
