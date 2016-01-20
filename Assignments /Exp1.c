@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<ucontext.h>
 #define MEM 8000
+#define ARR_SIZE 10
 
 int count = 0;
 
@@ -11,7 +12,7 @@ typedef struct MyThread {
     struct MyThread * next;
     struct MyThread * prev;
     int parent;
-    int blockedFor[10];
+    int blockedFor[ARR_SIZE];
 } MyThread;
 
 MyThread* ready_queue;
@@ -20,6 +21,7 @@ MyThread* blocked_queue;
 MyThread controller;
 
 MyThread child1, child2;
+MyThread trial;
 
 MyThread* insertNode(MyThread* head)
 {
@@ -44,6 +46,64 @@ MyThread* insertNode(MyThread* head)
 	}
 
 }
+
+void insertIntoBlockedQueue(MyThread* newNode)
+{
+
+	printf("\n Inserting to Block Queue. Thread: %d", newNode->id);
+	printf("\n This Thread is waiting on: ");
+	int i;
+	for (i=0; i<ARR_SIZE; i++)
+	{
+		printf(" %d ", newNode->blockedFor[i]);
+	}	
+	if(blocked_queue == NULL)
+	{
+		blocked_queue = ready_queue;
+		return;
+	}
+	
+	MyThread* trav;
+	trav = blocked_queue;
+	while(trav->next != NULL)
+		trav = trav->next;
+	trav->next = newNode;
+	
+}
+
+int MyThreadJoin(MyThread thread)
+{
+	if (thread.parent != ready_queue->id)
+		return -1; 
+	if (!presentInReadyQueue(thread.id)) 
+		return 1;
+
+	MyThread* child = insertNode(ready_queue); //modify code to insert into blocked queue directly.
+	getcontext(&(child->context));
+	memset(&(child->blockedFor[0]), 0, sizeof((ready_queue->blockedFor)));
+	ready_queue->blockedFor[0] = thread.id;
+	insertIntoBlockedQueue(ready_queue);
+	MyThread* trav = ready_queue;
+	ready_queue = ready_queue->next;
+	trav->next = NULL;
+	swapcontext(&trav->context, &ready_queue->context);
+
+	return 1;
+}
+
+int presentInReadyQueue(int id)
+{
+	MyThread* trav;
+	trav = ready_queue;
+	while(trav!=NULL)
+	{
+		if(trav->id == id)
+			return 1;
+		trav = trav->next;
+	}
+	return 0;
+}
+
 
 MyThread* moveNextNode(MyThread *head)
 {
@@ -80,6 +140,18 @@ MyThreadYield() // Finalized Yield Function
 	
 }
 
+CheckForUnblocking()
+{
+	if(blocked_queue == NULL)
+		return;
+	MyThread* trav = blocked_queue;	
+	while(trav != NULL)
+	{
+		for(
+	}
+	
+}
+
 
 void fn2()
 {
@@ -91,8 +163,10 @@ int fn1()
  printf("\nExecuting F1, ready queue id: %d\n", ready_queue->id);
  child2 = MyThreadCreate((void*)fn2, NULL);
  printf("\nthis is from 1_1\n");
- MyThreadYield();
+ printf("\n Joining the threads: parent %d(won't run again), child %d", ready_queue->id, child2.id);
+ MyThreadJoin(child2);
  printf("\nthis is from 1_2\n");
+ printf("THIS SHOULD NOT PRINT: If printed, unsuccessful");
 }
 
 
