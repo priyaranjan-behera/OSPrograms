@@ -187,6 +187,7 @@ void MyThreadJoinAll(void)
 	printQueues();
 	swapcontext(&temp->context, &ready_queue->context);
 
+
 }
 
 int presentInReadyQueue(int id)
@@ -243,7 +244,7 @@ void CheckForUnblocking()
 {
 	printf("\nStarting Checking of Unblocking");
 	printQueues();
-	printf("TP1");
+	printf("TP1"); //getting segmentation fault here, need to check further - only for the last blocked thread.
 	int i;
 	int flag = 0;
 	if(blocked_queue == NULL)
@@ -334,10 +335,10 @@ int fn1()
 {
  printf("\nExecuting F1, ready queue id: %d\n", ready_queue->id);
  child2 = MyThreadCreate((void*)fn2, NULL);
- child2 = MyThreadCreate((void*)fn2, NULL);
+child2 = MyThreadCreate((void*)fn2, NULL);
  printf("\nthis is from 1_1\n");
  printf("\n Joining the threads: parent %d(won't run again), child %d", ready_queue->id, child2.id);
- MyThreadJoinAll();
+ MyThreadJoin(child2);
  printf("\nthis is from 1_2\n");
  printf("THIS SHOULD NOT PRINT: If printed, unsuccessful");
 }
@@ -375,7 +376,7 @@ int main(int argc, char *argv[])
 	printf("\nShould Repeat:");
 	printf("\nAbout to Start Checking of Unblocking");
 	printQueues();
-	//CheckForUnblocking();
+	CheckForUnblocking();
 	printf("\nChecked for Block");
 
 	
@@ -400,7 +401,7 @@ int main(int argc, char *argv[])
 		else if (ready_queue->next != NULL)
 		{	
 			ready_queue = ready_queue->next;
-			CheckForUnblocking();
+			//CheckForUnblocking();
 			next = ready_queue->context;
 			id = ready_queue->id;
 			printf("\n 2 Should Repeat:");
