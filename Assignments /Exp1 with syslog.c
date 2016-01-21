@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<ucontext.h>
+#include<syslog.h>
 #define MEM 8000
 #define ARR_SIZE 10
 
@@ -31,33 +32,33 @@ void printQueues()
 //
 		trial = ready_queue;
 		cnt = 0;
-		printf("\n*********************************");
-		printf("\nPrinting Ready Queue at Start: ");
+		syslog(LOG_INFO, "\n*********************************");
+		syslog(LOG_INFO, "\nPrinting Ready Queue at Start: ");
 		while(trial != NULL)
 		{	
-			printf(" %d ", trial->id);
+			syslog(LOG_INFO, " %d ", trial->id);
 			trial = trial->next;
 			cnt++;
 		}
 
 
-		printf("\nThe Total Count of Thread in Ready_Queue is %d", cnt);
-		printf("\n*********************************");
+		syslog(LOG_INFO, "\nThe Total Count of Thread in Ready_Queue is %d", cnt);
+		syslog(LOG_INFO, "\n*********************************");
 
 		trial = blocked_queue;
 		cnt = 0;
-		printf("\n*********************************");
-		printf("\nPrinting Block Queue at Start: ");
+		syslog(LOG_INFO, "\n*********************************");
+		syslog(LOG_INFO, "\nPrinting Block Queue at Start: ");
 		while(trial != NULL)
 		{	
-			printf(" %d ", trial->id);
+			syslog(LOG_INFO, " %d ", trial->id);
 			trial = trial->next;
 			cnt++;
 		}
 
 
-		printf("\nThe Total Count of Thread in Block_Queue is %d", cnt);
-		printf("\n*********************************");
+		syslog(LOG_INFO, "\nThe Total Count of Thread in Block_Queue is %d", cnt);
+		syslog(LOG_INFO, "\n*********************************");
 		//
 
 }
@@ -91,12 +92,12 @@ MyThread* insertNode(MyThread* head)
 void insertIntoBlockedQueue(MyThread* newNode)
 {
 
-	printf("\n Inserting to Block Queue. Thread: %d", newNode->id);
-	printf("\n This Thread is waiting on: ");
+	syslog(LOG_INFO, "\n Inserting to Block Queue. Thread: %d", newNode->id);
+	syslog(LOG_INFO, "\n This Thread is waiting on: ");
 	int i;
 	for (i=0; i<ARR_SIZE; i++)
 	{
-		printf(" %d ", newNode->blockedFor[i]);
+		syslog(LOG_INFO, " %d ", newNode->blockedFor[i]);
 	}	
 	if(blocked_queue == NULL)
 	{
@@ -116,13 +117,13 @@ void insertIntoBlockedQueue(MyThread* newNode)
 void insertIntoReadyQueue(MyThread* newNode)
 {
 
-	//printf("\n Inserting to Ready Queue. Thread: %d", newNode->id);
-	//printf("\nChecking if ready_queue is NULL");
+	syslog(LOG_INFO, "\n Inserting to Ready Queue. Thread: %d", newNode->id);
+	syslog(LOG_INFO, "\nChecking if ready_queue is NULL");
 
 	if(ready_queue == NULL)
 	{
 		ready_queue = newNode;
-		printf("Ready Queue was null");
+		syslog(LOG_INFO, "Ready Queue was null");
 		return;
 	}
 	
@@ -149,8 +150,8 @@ int MyThreadJoin(MyThread thread)
 	insertIntoBlockedQueue(ready_queue);
 	ready_queue->next = NULL;
 	ready_queue = trav;
-	//printf("\n Printing the Queues from Thread Join: ");
-	//printQueues();
+	syslog(LOG_INFO, "\n Printing the Queues from Thread Join: ");
+	printQueues();
 	swapcontext(&temp->context, &ready_queue->context);
 
 	return 1;
@@ -183,8 +184,8 @@ void MyThreadJoinAll(void)
 	insertIntoBlockedQueue(ready_queue);
 	ready_queue->next = NULL;
 	ready_queue = trav;
-	printf("\n Printing the Queues from Thread Join: ");
-	//printQueues();
+	syslog(LOG_INFO, "\n Printing the Queues from Thread Join: ");
+	printQueues();
 	swapcontext(&temp->context, &ready_queue->context);
 
 
@@ -221,30 +222,32 @@ MyThread MyThreadCreate (void(*start_funct)(void *), void *args) //Finalizes Cre
 	child->parent = ready_queue->id;
 	child->context.uc_link=&controller;
 	makecontext(&(child->context), (void*)start_funct, args);
-	printf("\nHi, this is the %d thread getting created, my parent is: %d", child->id, ready_queue->id);
-	//printQueues();
+	syslog(LOG_INFO, "\nHi, this is the %d thread getting created, my parent is: %d", child->id, ready_queue->id);
+	printQueues();
 	return *child;
 }
 
 MyThreadYield() // Finalized Yield Function
 {
 	MyThread* child = insertNode(ready_queue);
-	printf("Inside Yielding Function");
+	syslog(LOG_INFO, "Inside Yielding Function");
 	if(ready_queue->next != NULL)
 	{
-		printf("\n Yielding at: %d to %d", ready_queue->id, ready_queue->next->id);
+		syslog(LOG_INFO, "\n Yielding at: %d to %d", ready_queue->id, ready_queue->next->id);
+		getcontext(&(child->context));
 		ready_queue = ready_queue->next;
-		swapcontext(&(child->context),&ready_queue->context);
+		setcontext(&ready_queue->context);
 	}
 	
 }
 
 void CheckForUnblocking()
 {
-	//printf("\nStarting Checking of Unblocking");
+	syslog(LOG_INFO, "\nStarting Checking of Unblocking");
+	printQueues();
+	syslog(LOG_INFO, "TP1"); //getting segmentation fault here, need to check further - only for the last blocked thread.
 	int i;
 	int flag = 0;
-	//printQueues(); //getting segmentation fault here, need to check further - only for the last blocked thread.
 	if(blocked_queue == NULL)
 		return;
 	
@@ -259,19 +262,19 @@ void CheckForUnblocking()
 			if(presentInReadyQueue(trav->blockedFor[i]))
 			{
 				flag = 1;
-				printf("\nFlagged 1");
+				syslog(LOG_INFO, "Flagged 1");
 				break;
 			}	
 		}
 
 		if(flag == 0)
 		{
-			blocked_queue = blocked_queue->next;
-			printf("\n Before inserting to ready queue: %d", trav->id);
+			blocked_queue = trav->next;
+			syslog(LOG_INFO, "\n Before inserting to ready queue: %d", blocked_queue->id);
 			insertIntoReadyQueue(trav);
 			if(blocked_queue == NULL)
 			{
-				printf("\nUnblocking Last Node at Head: %d", trav->id);
+				syslog(LOG_INFO, "\nUnblocking Node at Head: %d", trav->id);
 				return;			
 			}			
 		}
@@ -295,7 +298,7 @@ void CheckForUnblocking()
 		}
 		if(flag == 0)
 		{
-			printf("Before Inserting - id: %d", trav->id);
+			syslog(LOG_INFO, "Before Inserting - id: %d", trav->id);
 			temp = trav;
 			if(prev == trav)
 			{
@@ -309,8 +312,8 @@ void CheckForUnblocking()
 			}
 			trav->next = trav->next->next;
 			insertIntoReadyQueue(temp);
-			printf("Inserted Node");
-			//printf("\nUnblocking Node: %d", temp->id);
+			syslog(LOG_INFO, "Inserted Node");
+			//syslog(LOG_INFO, "\nUnblocking Node: %d", temp->id);
 			
 		}
 		else
@@ -335,20 +338,24 @@ int fn1()
  child2 = MyThreadCreate((void*)fn2, NULL);
 child2 = MyThreadCreate((void*)fn2, NULL);
  printf("\nthis is from 1_1\n");
- printf("\n Joining the threads: parent %d(won't run again), child %d", ready_queue->id, child2.id);
+ syslog(LOG_INFO, "\n Joining the threads: parent %d(won't run again), child %d", ready_queue->id, child2.id);
  MyThreadJoin(child2);
  printf("\nthis is from 1_2\n");
- printf("If printed, %d has joined successfully", ready_queue->id);
+ syslog(LOG_INFO, "THIS SHOULD NOT PRINT: If printed, unsuccessful");
 }
 
 
 int main(int argc, char *argv[])
 {
 
+	setlogmask (LOG_UPTO (LOG_INFO));
+	openlog ("exampleprog", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+
+
 	start = 1;
 	
 	MyThread* node;
-    	printf("\nCP1");
+    	syslog(LOG_INFO, "\nCP1");
 	ready_queue = malloc(sizeof(MyThread));
 	getcontext(&ready_queue->context);
  	ready_queue->context.uc_link=&controller;
@@ -356,25 +363,30 @@ int main(int argc, char *argv[])
  	ready_queue->context.uc_stack.ss_size=MEM;
  	ready_queue->context.uc_stack.ss_flags=0;
 	ready_queue->id = count++;
-	printf("Allocation Initial Id: %d", ready_queue->id);
+	syslog(LOG_INFO, "Allocation Initial Id: %d", ready_queue->id);
 
 	makecontext(&ready_queue->context, (void*)&fn1, 0);
 
 	child1 = MyThreadCreate((void*)fn1, NULL);
 	child2 = MyThreadCreate((void*)fn2, NULL);
 
+	syslog(LOG_INFO, "\nPrinting the entire list: ");
+
 	ucontext_t next;
 	int id;	
+	
+	syslog(LOG_INFO, "\n3Allocation Initial Id: %d", ready_queue->id);
 
 	getcontext(&controller);
-
-	printf("\nAbout to Start Checking of Unblocking");
-	//printQueues();
+	syslog(LOG_INFO, "\nShould Repeat:");
+	syslog(LOG_INFO, "\nAbout to Start Checking of Unblocking");
+	printQueues();
 	CheckForUnblocking();
-	printf("\nChecked for Block");
+	syslog(LOG_INFO, "\nChecked for Block");
 
 	
-	printQueues();
+	syslog(LOG_INFO, "\n3Allocation Initial Id: %d", ready_queue->id);
+
 
 
 	if(ready_queue != NULL)
@@ -385,10 +397,10 @@ int main(int argc, char *argv[])
 		{
 			next = ready_queue->context;
 			id = ready_queue->id;
-			printf("\n 2 Should Repeat:");
-			printf("\n4Allocation Initial Id: %d", ready_queue->id);
+			syslog(LOG_INFO, "\n 2 Should Repeat:");
+			syslog(LOG_INFO, "\n4Allocation Initial Id: %d", ready_queue->id);
 			start = 0;
-			//printQueues();
+			printQueues();
 			setcontext(&next);
 		}
 		else if (ready_queue->next != NULL)
@@ -397,37 +409,37 @@ int main(int argc, char *argv[])
 			//CheckForUnblocking();
 			next = ready_queue->context;
 			id = ready_queue->id;
-			printf("\n 2 Should Repeat:");
-			printf("\nSetting Context Id: %d",id);
+			syslog(LOG_INFO, "\n 2 Should Repeat:");
+			syslog(LOG_INFO, "\nSetting Context Id: %d",id);
 
 
-			//printQueues();
+			printQueues();
 
 			setcontext(&next);
 		}
 		else 
 		{
-			printf("1Entering New Code");
+			syslog(LOG_INFO, "1Entering New Code");
 			ready_queue = NULL;
-			printf("2Entering New Code");
-			//printQueues();
+			syslog(LOG_INFO, "2Entering New Code");
+			printQueues();
 			CheckForUnblocking();
-			printf("1Entering New Code");
+			syslog(LOG_INFO, "1Entering New Code");
 			if (ready_queue != NULL)
 			{
 				next = ready_queue->context;
 				id = ready_queue->id;
-				printf("\n 2 Should Repeat:");
-				printf("\nSetting Context Id: %d",id);
+				syslog(LOG_INFO, "\n 2 Should Repeat:");
+				syslog(LOG_INFO, "\nSetting Context Id: %d",id);
 
 
-				//printQueues();
+				printQueues();
 
 				setcontext(&next);
 			}
 		}
 	}
- 	printf("completed\n");
-
+ 	syslog(LOG_INFO, "completed\n");
+	closelog ();
  	exit(0);
 }

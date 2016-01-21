@@ -116,8 +116,8 @@ void insertIntoBlockedQueue(MyThread* newNode)
 void insertIntoReadyQueue(MyThread* newNode)
 {
 
-	printf("\n Inserting to Ready Queue. Thread: %d", newNode->id);
-	printf("\nChecking if ready_queue is NULL");
+	//printf("\n Inserting to Ready Queue. Thread: %d", newNode->id);
+	//printf("\nChecking if ready_queue is NULL");
 
 	if(ready_queue == NULL)
 	{
@@ -149,8 +149,8 @@ int MyThreadJoin(MyThread thread)
 	insertIntoBlockedQueue(ready_queue);
 	ready_queue->next = NULL;
 	ready_queue = trav;
-	printf("\n Printing the Queues from Thread Join: ");
-	printQueues();
+	//printf("\n Printing the Queues from Thread Join: ");
+	//printQueues();
 	swapcontext(&temp->context, &ready_queue->context);
 
 	return 1;
@@ -184,7 +184,7 @@ void MyThreadJoinAll(void)
 	ready_queue->next = NULL;
 	ready_queue = trav;
 	printf("\n Printing the Queues from Thread Join: ");
-	printQueues();
+	//printQueues();
 	swapcontext(&temp->context, &ready_queue->context);
 
 
@@ -222,7 +222,7 @@ MyThread MyThreadCreate (void(*start_funct)(void *), void *args) //Finalizes Cre
 	child->context.uc_link=&controller;
 	makecontext(&(child->context), (void*)start_funct, args);
 	printf("\nHi, this is the %d thread getting created, my parent is: %d", child->id, ready_queue->id);
-	printQueues();
+	//printQueues();
 	return *child;
 }
 
@@ -233,20 +233,18 @@ MyThreadYield() // Finalized Yield Function
 	if(ready_queue->next != NULL)
 	{
 		printf("\n Yielding at: %d to %d", ready_queue->id, ready_queue->next->id);
-		getcontext(&(child->context));
 		ready_queue = ready_queue->next;
-		setcontext(&ready_queue->context);
+		swapcontext(&(child->context),&ready_queue->context);
 	}
 	
 }
 
 void CheckForUnblocking()
 {
-	printf("\nStarting Checking of Unblocking");
-	printQueues();
-	printf("TP1"); //getting segmentation fault here, need to check further - only for the last blocked thread.
+	//printf("\nStarting Checking of Unblocking");
 	int i;
 	int flag = 0;
+	//printQueues(); //getting segmentation fault here, need to check further - only for the last blocked thread.
 	if(blocked_queue == NULL)
 		return;
 	
@@ -261,19 +259,19 @@ void CheckForUnblocking()
 			if(presentInReadyQueue(trav->blockedFor[i]))
 			{
 				flag = 1;
-				printf("Flagged 1");
+				printf("\nFlagged 1");
 				break;
 			}	
 		}
 
 		if(flag == 0)
 		{
-			blocked_queue = trav->next;
-			printf("\n Before inserting to ready queue: %d", blocked_queue->id);
+			blocked_queue = blocked_queue->next;
+			printf("\n Before inserting to ready queue: %d", trav->id);
 			insertIntoReadyQueue(trav);
 			if(blocked_queue == NULL)
 			{
-				printf("\nUnblocking Node at Head: %d", trav->id);
+				printf("\nUnblocking Last Node at Head: %d", trav->id);
 				return;			
 			}			
 		}
@@ -340,7 +338,7 @@ child2 = MyThreadCreate((void*)fn2, NULL);
  printf("\n Joining the threads: parent %d(won't run again), child %d", ready_queue->id, child2.id);
  MyThreadJoin(child2);
  printf("\nthis is from 1_2\n");
- printf("THIS SHOULD NOT PRINT: If printed, unsuccessful");
+ printf("If printed, %d has joined successfully", ready_queue->id);
 }
 
 
@@ -375,7 +373,7 @@ int main(int argc, char *argv[])
 	getcontext(&controller);
 	printf("\nShould Repeat:");
 	printf("\nAbout to Start Checking of Unblocking");
-	printQueues();
+	//printQueues();
 	CheckForUnblocking();
 	printf("\nChecked for Block");
 
@@ -395,7 +393,7 @@ int main(int argc, char *argv[])
 			printf("\n 2 Should Repeat:");
 			printf("\n4Allocation Initial Id: %d", ready_queue->id);
 			start = 0;
-			printQueues();
+			//printQueues();
 			setcontext(&next);
 		}
 		else if (ready_queue->next != NULL)
@@ -408,7 +406,7 @@ int main(int argc, char *argv[])
 			printf("\nSetting Context Id: %d",id);
 
 
-			printQueues();
+			//printQueues();
 
 			setcontext(&next);
 		}
@@ -417,7 +415,7 @@ int main(int argc, char *argv[])
 			printf("1Entering New Code");
 			ready_queue = NULL;
 			printf("2Entering New Code");
-			printQueues();
+			//printQueues();
 			CheckForUnblocking();
 			printf("1Entering New Code");
 			if (ready_queue != NULL)
@@ -428,7 +426,7 @@ int main(int argc, char *argv[])
 				printf("\nSetting Context Id: %d",id);
 
 
-				printQueues();
+				//printQueues();
 
 				setcontext(&next);
 			}
