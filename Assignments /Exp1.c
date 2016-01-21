@@ -5,6 +5,7 @@
 #define ARR_SIZE 10
 
 int count = 0;
+int start;
 
 typedef struct MyThread {
     ucontext_t context;
@@ -68,6 +69,27 @@ void insertIntoBlockedQueue(MyThread* newNode)
 	while(trav->next != NULL)
 		trav = trav->next;
 	trav->next = newNode;
+	trav->next->next = NULL;
+	
+}
+
+void insertIntoReadyQueue(MyThread* newNode)
+{
+
+	printf("\n Inserting to Ready Queue. Thread: %d", newNode->id);
+	int i;	
+	if(ready_queue == NULL)
+	{
+		ready_queue = newNode;
+		return;
+	}
+	
+	MyThread* trav;
+	trav = ready_queue;
+	while(trav->next != NULL)
+		trav = trav->next;
+	trav->next = newNode;
+	trav->next->next = NULL;
 	
 }
 
@@ -78,7 +100,7 @@ int MyThreadJoin(MyThread thread)
 	if (!presentInReadyQueue(thread.id)) 
 		return 1;
 
-	MyThread* child = insertNode(ready_queue); //modify code to insert into blocked queue directly.
+	MyThread* child = insertNode(blocked_queue); //modify code to insert into blocked queue directly.***** CHANGE CHANGEE
 	getcontext(&(child->context));
 	memset(&(child->blockedFor[0]), 0, sizeof((ready_queue->blockedFor)));
 	ready_queue->blockedFor[0] = thread.id;
@@ -122,7 +144,7 @@ MyThread MyThreadCreate (void(*start_funct)(void *), void *args) //Finalizes Cre
 	child->parent = ready_queue->id;
 	child->context.uc_link=&controller;
 	makecontext(&(child->context), (void*)start_funct, args);
-	printf("\nHi, this is the %d thread getting created, my parent is: %d", count, ready_queue->id);
+	printf("\nHi, this is the %d thread getting created, my parent is: %d", child->id, ready_queue->id);
 	return *child;
 }
 
@@ -140,14 +162,62 @@ MyThreadYield() // Finalized Yield Function
 	
 }
 
-CheckForUnblocking()
+void CheckForUnblocking()
 {
+	int i;
+	int flag = 0;
 	if(blocked_queue == NULL)
 		return;
-	MyThread* trav = blocked_queue;	
-	while(trav != NULL)
+	MyThread* trav = blocked_queue;
+
+		flag = 0;
+		for(i=0; i<ARR_SIZE; i++)
+		{
+			if(trav->blockedFor[i] == 0)
+				break;
+			if(presentInReadyQueue(trav->blockedFor[i]))
+			{
+				flag = 1;
+				break;
+			}	
+		}
+
+		if(flag == 0)
+		{
+			
+			insertIntoReadyQueue(trav);
+			if(trav->next == NULL)
+			{
+				printf("\nUnblocking Node at Head: %d", trav->id);
+				blocked_queue = NULL;
+				return;			
+			}			
+		}
+
+	
+		
+	
+	while(trav->next != NULL)
 	{
-		for(
+		flag = 0;
+		for(i=0; i<ARR_SIZE; i++)
+		{
+			if(trav->next->blockedFor[i] == 0)
+				break;
+			if(presentInReadyQueue(trav->next->blockedFor[i]))
+			{
+				flag = 1;
+				break;
+			}	
+		}
+		if(flag == 0)
+		{
+			
+			insertIntoReadyQueue(trav->next);
+			printf("\nUnblocking Node: %d", trav->next->id);
+			trav->next = trav->next->next;
+		}
+		trav = trav->next;
 	}
 	
 }
@@ -172,6 +242,8 @@ int fn1()
 
 int main(int argc, char *argv[])
 {
+
+	start = 1;
 	MyThread* node;
     	printf("\nCP1");
 	ready_queue = malloc(sizeof(MyThread));
@@ -180,15 +252,13 @@ int main(int argc, char *argv[])
  	ready_queue->context.uc_stack.ss_sp=malloc(MEM);
  	ready_queue->context.uc_stack.ss_size=MEM;
  	ready_queue->context.uc_stack.ss_flags=0;
+	ready_queue->id = count++;
+	printf("Allocation Initial Id: %d", ready_queue->id);
 
 	makecontext(&ready_queue->context, (void*)&fn1, 0);
 
-	child2 = MyThreadCreate((void*)fn2, NULL);
-
-	printf("\nCP2");
-	child1 = MyThreadCreate((void*)fn1, NULL);
-	child1 = MyThreadCreate((void*)fn1, NULL);
-	child2 = MyThreadCreate((void*)fn2, NULL);
+	//child1 = MyThreadCreate((void*)fn1, NULL);
+	//child2 = MyThreadCreate((void*)fn2, NULL);
 
 	printf("\nPrinting the entire list: ");
 
@@ -199,6 +269,8 @@ int main(int argc, char *argv[])
 		test = test->next;
 	}
 
+	printf("\n2Allocation Initial Id: %d", ready_queue->id);
+
 	while (test != NULL)
 	{
 		printf("\nBackward Id: %d", test->id);
@@ -207,13 +279,42 @@ int main(int argc, char *argv[])
 	ucontext_t next;
 	int id;	
 	
+	printf("\n3Allocation Initial Id: %d", ready_queue->id);
+
 	getcontext(&controller);
 	printf("\nShould Repeat:");
+	//CheckForUnblocking();
+	printf("\nChecked for Block");
+
+	
+	printf("\n3Allocation Initial Id: %d", ready_queue->id);
+
 	if(ready_queue != NULL)
 	{
-		ready_queue = ready_queue->next;
-		if (ready_queue != NULL)
+		
+		MyThread* trial = ready_queue;
+		int cnt = 0;
+		while(trial != NULL)
 		{
+			trial = trial->next;
+			cnt++;
+		}
+
+		printf("\n*********************************");
+		printf("\nThe Total Count of Thread in Ready_Queue is %d", cnt);
+		printf("\n*********************************");
+		if(start == 1)
+		{
+			next = ready_queue->context;
+			id = ready_queue->id;
+			printf("\n 2 Should Repeat:");
+			printf("\n4Allocation Initial Id: %d", ready_queue->id);
+			start = 0;
+			setcontext(&next);
+		}
+		else if (ready_queue->next != NULL)
+		{	
+			ready_queue = ready_queue->next;
 			next = ready_queue->context;
 			id = ready_queue->id;
 			printf("\n 2 Should Repeat:");
