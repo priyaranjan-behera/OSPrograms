@@ -156,20 +156,25 @@ int MyThreadJoin(MyThread thread)
 	return 1;
 }
 
-void MyThreadJoinAll(void)
+void MyThreadJoinAll()
 {
+	printQueues();
 	MyThread* trav = ready_queue;
 	int children[ARR_SIZE];
 	
 	int i, counter = 0;
 	while(trav != NULL)
 	{
-		if(trav->parent == ready_queue->id)
+		if((trav->parent == ready_queue->id) && (ready_queue->id != ready_queue->parent)) //second term to handle root node joining
 		{
 			children[counter++] = trav->id;
 		}
+		trav = trav->next;
 	}
 	
+	printf("\nThe counter returns %d", counter);
+	printQueues();
+
 	if(counter == 0)
 		return;
 	memset(&(ready_queue->blockedFor[0]), 0, sizeof((ready_queue->blockedFor)));
@@ -333,10 +338,10 @@ int fn1()
 {
  printf("\nExecuting F1, ready queue id: %d\n", ready_queue->id);
  child2 = MyThreadCreate((void*)fn2, NULL);
-child2 = MyThreadCreate((void*)fn2, NULL);
+ child2 = MyThreadCreate((void*)fn2, NULL);
  printf("\nthis is from 1_1\n");
  printf("\n Joining the threads: parent %d(won't run again), child %d", ready_queue->id, child2.id);
- MyThreadJoin(child2);
+ MyThreadJoinAll();
  printf("\nthis is from 1_2\n");
  printf("If printed, %d has joined successfully", ready_queue->id);
 }
@@ -360,26 +365,20 @@ int main(int argc, char *argv[])
 
 	makecontext(&ready_queue->context, (void*)&fn1, 0);
 
-	child1 = MyThreadCreate((void*)fn1, NULL);
 	child2 = MyThreadCreate((void*)fn2, NULL);
-
-	printf("\nPrinting the entire list: ");
 
 	ucontext_t next;
 	int id;	
-	
-	printf("\n3Allocation Initial Id: %d", ready_queue->id);
 
 	getcontext(&controller);
-	printf("\nShould Repeat:");
+
 	printf("\nAbout to Start Checking of Unblocking");
 	//printQueues();
 	CheckForUnblocking();
 	printf("\nChecked for Block");
 
 	
-	printf("\n3Allocation Initial Id: %d", ready_queue->id);
-
+	printQueues();
 
 
 	if(ready_queue != NULL)
