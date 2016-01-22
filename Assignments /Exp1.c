@@ -328,6 +328,11 @@ void CheckForUnblocking()
 	
 }
 
+void MyThreadExit(void)
+{
+	setcontext(&controller);
+}
+
 
 void fn2()
 {
@@ -346,11 +351,9 @@ int fn1()
  printf("If printed, %d has joined successfully", ready_queue->id);
 }
 
-
-int main(int argc, char *argv[])
+void MyThreadInit(void(*start_funct)(void *), void *args)
 {
-
-	start = 1;
+start = 1;
 	
 	MyThread* node;
     	printf("\nCP1");
@@ -363,9 +366,7 @@ int main(int argc, char *argv[])
 	ready_queue->id = count++;
 	printf("Allocation Initial Id: %d", ready_queue->id);
 
-	makecontext(&ready_queue->context, (void*)&fn1, 0);
-
-	child2 = MyThreadCreate((void*)fn2, NULL);
+	makecontext(&ready_queue->context, (void*)start_funct, args);
 
 	ucontext_t next;
 	int id;	
@@ -433,5 +434,11 @@ int main(int argc, char *argv[])
 	}
  	printf("completed\n");
 
+}
+
+int main(int argc, char *argv[])
+{
+	
+	MyThreadInit(&fn1, NULL);
  	exit(0);
 }
