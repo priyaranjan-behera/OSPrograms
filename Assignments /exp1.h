@@ -225,7 +225,7 @@ MyThread MyThreadCreate (void(*start_funct)(void *), void *args) //Finalizes Cre
 	child->id = count++;
 	child->parent = ready_queue->id;
 	child->context.uc_link=&controller;
-	makecontext(&(child->context), (void*)start_funct, 1, *(int*)args);
+	makecontext(&(child->context), (void*)start_funct, (void *) args);
 	printf("\nHi, this is the %d thread getting created, my parent is: %d", child->id, ready_queue->id);
 	//printQueues();
 	return *child;
@@ -334,22 +334,16 @@ void MyThreadExit(void)
 }
 
 
-void fn2(void *args)
+void fn2()
 {
- int *n = (int*)args;
  printf("\nExecuting F2, ready queue id: %d\n", ready_queue->id);
- printf("\n The Argument Obtained is: %d", args);
 }
 
 int fn1()
 {
- int n = 10;
  printf("\nExecuting F1, ready queue id: %d\n", ready_queue->id);
- printf("\n N = %d", n);
- printf("\n &N = %d", &n);
-
- child2 = MyThreadCreate((void*)fn2, &n);
- child2 = MyThreadCreate((void*)fn2, &n);
+ child2 = MyThreadCreate((void*)fn2, NULL);
+ child2 = MyThreadCreate((void*)fn2, NULL);
  printf("\nthis is from 1_1\n");
  printf("\n Joining the threads: parent %d(won't run again), child %d", ready_queue->id, child2.id);
  MyThreadJoinAll();
@@ -360,7 +354,7 @@ int fn1()
 void MyThreadInit(void(*start_funct)(void *), void *args)
 {
 start = 1;
-	
+	printQueues();
 	MyThread* node;
     	printf("\nCP1");
 	ready_queue = malloc(sizeof(MyThread));
@@ -372,7 +366,7 @@ start = 1;
 	ready_queue->id = count++;
 	printf("Allocation Initial Id: %d", ready_queue->id);
 
-	makecontext(&ready_queue->context, (void*)start_funct, args);
+	makecontext(&ready_queue->context, (void*)start_funct, (void *)args);
 
 	ucontext_t next;
 	int id;	
@@ -442,9 +436,3 @@ start = 1;
 
 }
 
-int main(int argc, char *argv[])
-{
-	
-	MyThreadInit(&fn1, NULL);
- 	exit(0);
-}
