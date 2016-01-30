@@ -78,7 +78,7 @@ void printQueues()
 		printf("\nPrinting Semaphore Block Queue at Start: ");
 		while(trial != NULL)
 		{	
-			printf(" %d ", trial->id);
+			printf(" (%d - Blocked for Sem Id: %d) ", trial->id, trial->semaphoreBlocked);
 			trial = trial->next;
 			cnt++;
 		}
@@ -341,33 +341,42 @@ In this case, the counter of S must be zero (see the discussion of Wait above). 
 
 
 	if(!HasWaitingThreads(*sem))
+	{
+		printf("I don't see any threads waiting");
 		sem->semaphoreValue++;
+	}
 	else
 	{
+		printf("Yes, there are some threads waiting");
 		RemoveFromSemaphoreBlocked(sem); //remove the first thread you find with the same blockedSemaphoreId and add to ready queue.
 	}
 		
 	return;
 }
 
-void RemoveFromSemaphoreBlocked(MySemaphore sem)
+void RemoveFromSemaphoreBlocked(MySemaphore* sem)
 {
-	MyThread* trav = blocked_queue;
-
+	MyThread* trav = semaphore_blocked_queue;
+	MyThread* temp;
+	printf("CP1");
 	if(semaphore_blocked_queue == NULL)
 		return;
 
-	if(semaphore_blocked_queue->semaphoreBlocked == sem.semaphoreId)
+	printf("CP2");
+	printf("\n Blocked Queue Head Waiting on: %d, Signal got for sem: %d", semaphore_blocked_queue->semaphoreBlocked, sem->semaphoreId);
+	if(semaphore_blocked_queue->semaphoreBlocked == sem->semaphoreId)
 	{
+		printf("CP3");
+		temp = semaphore_blocked_queue->next;
 		insertIntoReadyQueue(semaphore_blocked_queue);
-		semaphore_blocked_queue = semaphore_blocked_queue->next;
+		printf("Yayyy! Unblocked through signal, Thread Id: %d\n", semaphore_blocked_queue->id);
+		semaphore_blocked_queue = temp;
 		return;
 	}
 
-	MyThread* temp;
 	while(trav->next != NULL)
 	{
-		if(trav->next->semaphoreBlocked == sem.semaphoreId)
+		if(trav->next->semaphoreBlocked == sem->semaphoreId)
 		{
 			temp = trav->next->next;
 			insertIntoReadyQueue(trav->next);
@@ -402,7 +411,7 @@ In this case, the thread is suspended and put into the private queue of S.*/
 	if(sem->semaphoreValue>0)
 	{
 		sem->semaphoreValue--;
-		if (sem->semaphoreValue > 0)
+		if (sem->semaphoreValue >= 0) //Verify once, if Semaphore value change from 1 to 0 allows the execution or not.
 			return; //the semaphore is free for access
 	}
 	printf("\nTP2");
@@ -637,14 +646,14 @@ start = 1;
 void fn2(void *args)
 {
  int *n = (int*)args;
- printQueues();
+ //printQueues();
  printf("\nExecuting F2, ready queue id: %d\n", ready_queue->id);
  printf("\n The Argument Obtained is: %d", args);
  MySemaphoreSignal(&sem);
- printf("\nSemaphore has Value: %d", sem.semaphoreValue);
+ printf("\nF2 Semaphore has Value: %d", sem.semaphoreValue);
  MySemaphoreWait(&sem);
- printQueues();
- printf("\nSemaphore has Value: %d", sem.semaphoreValue);
+ //printQueues();
+ printf("\nF2 Semaphore has Value: %d", sem.semaphoreValue);
 }
 
 void fn3(void *args)
@@ -654,10 +663,10 @@ void fn3(void *args)
  printf("\nExecuting F3, ready queue id: %d\n", ready_queue->id);
  printf("\n The Argument Obtained is: %d", args);
  MySemaphoreSignal(&sem);
- printf("\nSemaphore has Value: %d", sem.semaphoreValue);
+ printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
  MySemaphoreSignal(&sem);
  printQueues();
- printf("\nSemaphore has Value: %d", sem.semaphoreValue);
+ printf("\nSF3 emaphore has Value: %d", sem.semaphoreValue);
 }
 
 
