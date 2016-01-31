@@ -357,18 +357,20 @@ The counter of S is increased by one and the thread resumes its execution.
 The queue of S has waiting threads 
 In this case, the counter of S must be zero (see the discussion of Wait above). One of the waiting threads will be allowed to leave the queue and resume its execution. The thread that executes Signal also continues.*/
 
-
-	if(!HasWaitingThreads(*sem))
+	sem->semaphoreValue++;
+	if(sem->semaphoreValue <= 0)
 	{
-		printf("I don't see any threads waiting");
-		sem->semaphoreValue++;
+		if(!HasWaitingThreads(*sem))
+		{
+			printf("I don't see any threads waiting");
+			return;
+		}
+		else
+		{
+			printf("Yes, there are some threads waiting");
+			RemoveFromSemaphoreBlocked(sem); //remove the first thread you find with the same blockedSemaphoreId and add to ready queue.
+		}
 	}
-	else
-	{
-		printf("Yes, there are some threads waiting");
-		RemoveFromSemaphoreBlocked(sem); //remove the first thread you find with the same blockedSemaphoreId and add to ready queue.
-	}
-		
 	return;
 }
 
@@ -426,12 +428,10 @@ In this case, the thread is suspended and put into the private queue of S.*/
 	printf("\n Semaphore Id: %d", sem->semaphoreId);
 	printf("\n Semaphore Value: %d", sem->semaphoreValue);
 	
-	if(sem->semaphoreValue>0)
-	{
-		sem->semaphoreValue--;
-		if (sem->semaphoreValue >= 0) //Verify once, if Semaphore value change from 1 to 0 allows the execu
-			return; //the semaphore is free for access
-	}
+	sem->semaphoreValue--;
+	if (sem->semaphoreValue >= 0) //Verify once, if Semaphore value change from 1 to 0 allows the execu
+		return; //the semaphore is free for access
+
 	printf("\nTP2");
 	printQueues();
 	printf("\n Semaphore Value: %d", sem->semaphoreValue);
@@ -440,7 +440,7 @@ In this case, the thread is suspended and put into the private queue of S.*/
 	{
 		setcontext(&controller);
 	}
-	if (sem->semaphoreValue==0 && ready_queue != NULL)
+	if (ready_queue != NULL)
 	{
 		printf("\nTP2");
 		printf("\nTP2");
