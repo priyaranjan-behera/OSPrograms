@@ -1,12 +1,12 @@
 #include <stdio.h>
-#include "header1.h"
+#include "mythread.h"
 
 int mode = 0;
 
 void t0(void * n)
 {
   MyThread T;
-  printf("\n n = %d", (int)n);
+
   int n1 = (int)n; 
   printf("t0 start %d\n", n1);
 
@@ -17,13 +17,9 @@ void t0(void * n)
     if (mode == 1)
       MyThreadYield();
     else if (mode == 2)
-      {
-	printQueues();
-	MyThreadJoin(T);
-     	printQueues();
-      }	
+      MyThreadJoin(T);
   }
-  printf("t0 end %d\n", n1);
+  printf("t0 end\n");
   MyThreadExit();
 }
 
