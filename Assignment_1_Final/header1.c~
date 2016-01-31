@@ -78,7 +78,7 @@ void printQueues()
 		printf("\nPrinting Semaphore Block Queue at Start: ");
 		while(trial != NULL)
 		{	
-			printf(" %d ", trial->id);
+			printf(" (%d - Blocked for Sem Id: %d) ", trial->id, trial->semaphoreBlocked);
 			trial = trial->next;
 			cnt++;
 		}
@@ -256,6 +256,18 @@ int presentInReadyQueue(int id)
 	return 0;
 }
 
+int presentInSemaphoreBlockedQueue(int id)
+{
+	MyThread* trav;
+	trav = semaphore_blocked_queue;
+	while(trav!=NULL)
+	{
+		if(trav->id == id)
+			return 1;
+		trav = trav->next;
+	}
+	return 0;
+}
 
 MyThread* moveNextNode(MyThread *head)
 {
@@ -295,7 +307,7 @@ MyThreadYield() // Finalized Yield Function
 
 MySemaphore MySemaphoreInit(int initialValue)
 {
-	if(initialValue <= 0)
+	if(initialValue < 0)
 	{
 		printf("Didn't create a semaphore. Improper Initial Value");
 		return;
@@ -341,33 +353,42 @@ In this case, the counter of S must be zero (see the discussion of Wait above). 
 
 
 	if(!HasWaitingThreads(*sem))
+	{
+		printf("I don't see any threads waiting");
 		sem->semaphoreValue++;
+	}
 	else
 	{
+		printf("Yes, there are some threads waiting");
 		RemoveFromSemaphoreBlocked(sem); //remove the first thread you find with the same blockedSemaphoreId and add to ready queue.
 	}
 		
 	return;
 }
 
-void RemoveFromSemaphoreBlocked(MySemaphore sem)
+void RemoveFromSemaphoreBlocked(MySemaphore* sem)
 {
-	MyThread* trav = blocked_queue;
-
+	MyThread* trav = semaphore_blocked_queue;
+	MyThread* temp;
+	printf("CP1");
 	if(semaphore_blocked_queue == NULL)
 		return;
 
-	if(semaphore_blocked_queue->semaphoreBlocked == sem.semaphoreId)
+	printf("CP2");
+	printf("\n Blocked Queue Head Waiting on: %d, Signal got for sem: %d", semaphore_blocked_queue->semaphoreBlocked, sem->semaphoreId);
+	if(semaphore_blocked_queue->semaphoreBlocked == sem->semaphoreId)
 	{
+		printf("CP3");
+		temp = semaphore_blocked_queue->next;
 		insertIntoReadyQueue(semaphore_blocked_queue);
-		semaphore_blocked_queue = semaphore_blocked_queue->next;
+		printf("Yayyy! Unblocked through signal, Thread Id: %d\n", semaphore_blocked_queue->id);
+		semaphore_blocked_queue = temp;
 		return;
 	}
 
-	MyThread* temp;
 	while(trav->next != NULL)
 	{
-		if(trav->next->semaphoreBlocked == sem.semaphoreId)
+		if(trav->next->semaphoreBlocked == sem->semaphoreId)
 		{
 			temp = trav->next->next;
 			insertIntoReadyQueue(trav->next);
@@ -391,31 +412,44 @@ In this case, the thread is suspended and put into the private queue of S.*/
 	
 
 	//capture the context here (1)
-
+	printf("\nTP1");
 	ucontext_t currentContext;
 	getcontext(&currentContext);
 
+	printf("\nTP1");
+	printf("\n Semaphore Id: %d", sem->semaphoreId);
+	printf("\n Semaphore Value: %d", sem->semaphoreValue);
+	
 	if(sem->semaphoreValue>0)
 	{
 		sem->semaphoreValue--;
-		if (sem->semaphoreValue > 0)
+		if (sem->semaphoreValue >= 0) //Verify once, if Semaphore value change from 1 to 0 allows the execu
 			return; //the semaphore is free for access
 	}
-	if (sem->semaphoreValue == 0)
+	printf("\nTP2");
+	printQueues();
+	printf("\n Semaphore Value: %d", sem->semaphoreValue);
+	printQueues();
+	if(ready_queue == NULL)
 	{
-	printf("\nTP1");
-	ready_queue->semaphoreBlocked = sem->semaphoreId;
-	MyThread* trav = ready_queue->next;
-	MyThread* temp = ready_queue;
-	printf("\nTP1");
-	insertIntoSemaphoreBlockedQueue(ready_queue);
-	ready_queue->context = currentContext;
-	ready_queue->next = NULL;
-	ready_queue = trav;
-	//printf("\n Printing the Queues from Thread Join: ");
-	//printQueues();
-	
-	setcontext(&ready_queue->context);
+		setcontext(&controller);
+	}
+	if (sem->semaphoreValue==0 && ready_queue != NULL)
+	{
+		printf("\nTP2");
+		printf("\nTP2");
+		ready_queue->semaphoreBlocked = sem->semaphoreId;
+		MyThread* trav = ready_queue->next;
+		MyThread* temp = ready_queue;
+		printf("\nTP3");
+		insertIntoSemaphoreBlockedQueue(ready_queue);
+		ready_queue->context = currentContext;
+		ready_queue->next = NULL;
+		ready_queue = trav;
+		//printf("\n Printing the Queues from Thread Join: ");
+		//printQueues();
+		if(ready_queue != NULL)
+			setcontext(&ready_queue->context);
 
 		//Put the context captured at (1) into the blockedSemaphoreQueue
 		
@@ -429,13 +463,19 @@ In this case, the thread is suspended and put into the private queue of S.*/
 
 void CheckForUnblocking()
 {
-	//printf("\nStarting Checking of Unblocking");
+
+	int isReadyEmpty = 0;
+	if(ready_queue == NULL)
+		isReadyEmpty = 1;
+
+	printf("\nStarting Checking of Unblocking");
 	int i;
 	int flag = 0;
-	//printQueues(); //getting segmentation fault here, need to check further - only for the last blocked thread.
+	printQueues(); //getting segmentation fault here, need to check further - only for the last blocked thread.
+	printf("CP1");
 	if(blocked_queue == NULL)
 		return;
-	
+	printf("CP2");
 	MyThread* trav = blocked_queue;
 	MyThread* temp;
 
@@ -447,19 +487,30 @@ void CheckForUnblocking()
 			if(presentInReadyQueue(trav->blockedFor[i]))
 			{
 				flag = 1;
-				//printf("\nFlagged 1");
+				printf("\nFlagged 1");
+				break;
+			}
+			if(presentInSemaphoreBlockedQueue(trav->blockedFor[i]))
+			{
+				flag = 1;
+				printf("\nFlagged 1");
 				break;
 			}	
 		}
-
+		printf("CP3");
 		if(flag == 0)
 		{
 			blocked_queue = blocked_queue->next;
-			//printf("\n Before inserting to ready queue: %d", trav->id);
+			printf("\n Before inserting to ready queue: %d", trav->id);
 			insertIntoReadyQueue(trav);
 			if(blocked_queue == NULL)
 			{
-				//printf("\nUnblocking Last Node at Head: %d", trav->id);
+				printf("\nUnblocking Last Node at Head: %d", trav->id);
+				if(isReadyEmpty == 1)
+				{
+					printf("Yayy! it works!");
+					setcontext(&ready_queue->context);
+				}
 				return;			
 			}			
 		}
@@ -507,6 +558,12 @@ void CheckForUnblocking()
 			trav = trav->next;
 		}
 			
+	}
+
+	if(isReadyEmpty == 1)
+	{
+		printf("Yayy! it works!");
+		setcontext(&ready_queue->context);
 	}
 	
 }
@@ -608,14 +665,31 @@ start = 1;
 void fn2(void *args)
 {
  int *n = (int*)args;
- printQueues();
+ //printQueues();
  printf("\nExecuting F2, ready queue id: %d\n", ready_queue->id);
  printf("\n The Argument Obtained is: %d", args);
  MySemaphoreWait(&sem);
- printf("\nSemaphore has Value: %d", sem.semaphoreValue);
- MySemaphoreWait(&sem);
+ //printQueues();
+ printf("\nF2 Semaphore has Value: %d", sem.semaphoreValue);
+}
+
+void fn3(void *args)
+{
+ int *n = (int*)args;
  printQueues();
- printf("\nSemaphore has Value: %d", sem.semaphoreValue);
+ printf("\nExecuting F3, ready queue id: %d\n", ready_queue->id);
+ printf("\n The Argument Obtained is: %d", args);
+ MySemaphoreSignal(&sem);
+ printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
+ MySemaphoreSignal(&sem);
+ printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
+ MySemaphoreSignal(&sem);
+ printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
+ MySemaphoreSignal(&sem);
+
+
+ printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
+ printQueues();
 }
 
 
@@ -625,9 +699,11 @@ int fn1()
  printf("\nExecuting F1, ready queue id: %d\n", ready_queue->id);
  printf("\n N = %d", n);
  printf("\n &N = %d", &n);
- sem = MySemaphoreInit(2);
+ sem = MySemaphoreInit(0);
  printf("\nSemaphore has Initial Value: %d", sem.semaphoreValue);
  child2 = MyThreadCreate((void*)fn2, &n);
+ child2 = MyThreadCreate((void*)fn2, &n);
+ child2 = MyThreadCreate((void*)fn3, &n);
  child2 = MyThreadCreate((void*)fn2, &n);
  printf("\nthis is from 1_1\n");
  printf("\n Joining the threads: parent %d(won't run again), child %d", ready_queue->id, child2.id);

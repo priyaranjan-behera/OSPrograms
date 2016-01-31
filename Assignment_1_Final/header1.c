@@ -247,15 +247,33 @@ int presentInReadyQueue(int id)
 {
 	MyThread* trav;
 	trav = ready_queue;
+	printf("CPPRQ");
 	while(trav!=NULL)
 	{
 		if(trav->id == id)
 			return 1;
 		trav = trav->next;
 	}
+
 	return 0;
 }
 
+int presentInSemaphoreBlockedQueue(int id)
+{
+	MyThread* trav;
+	trav = semaphore_blocked_queue;
+	printf("CPPSBQ");
+	while(trav!=NULL)
+	{
+		if(trav->id == id)
+		{
+			printf("CPPSBQ-Returing 1");
+			return 1;
+		}
+		trav = trav->next;
+	}
+	return 0;
+}
 
 MyThread* moveNextNode(MyThread *head)
 {
@@ -411,7 +429,7 @@ In this case, the thread is suspended and put into the private queue of S.*/
 	if(sem->semaphoreValue>0)
 	{
 		sem->semaphoreValue--;
-		if (sem->semaphoreValue >= 0) //Verify once, if Semaphore value change from 1 to 0 allows the execution or not.
+		if (sem->semaphoreValue >= 0) //Verify once, if Semaphore value change from 1 to 0 allows the execu
 			return; //the semaphore is free for access
 	}
 	printf("\nTP2");
@@ -460,9 +478,10 @@ void CheckForUnblocking()
 	int i;
 	int flag = 0;
 	printQueues(); //getting segmentation fault here, need to check further - only for the last blocked thread.
+	printf("CP1");
 	if(blocked_queue == NULL)
 		return;
-	
+	printf("CP2");
 	MyThread* trav = blocked_queue;
 	MyThread* temp;
 
@@ -476,9 +495,18 @@ void CheckForUnblocking()
 				flag = 1;
 				printf("\nFlagged 1");
 				break;
+			}
+			if(presentInSemaphoreBlockedQueue(trav->blockedFor[i]))
+			{
+				//printQueues();
+				flag = 1;
+				printf("\nFlagged 1");
+				//printQueues();
+
+				break;
 			}	
 		}
-
+		printf("CP3");
 		if(flag == 0)
 		{
 			blocked_queue = blocked_queue->next;
@@ -512,6 +540,15 @@ void CheckForUnblocking()
 				flag = 1;
 				break;
 			}	
+			if(presentInSemaphoreBlockedQueue(trav->blockedFor[i]))
+			{
+				//printQueues();
+				flag = 1;
+				printf("\nFlagged 1");
+				//printQueues();
+
+				break;
+			}
 		}
 		if(flag == 0)
 		{
@@ -638,7 +675,9 @@ start = 1;
 			}
 		}
 	}
- 	//printf("completed\n");
+ 	printf("completed\n");
+ 	printf("Final Queue Remains: ");
+ 	printQueues();
 
 }
 
@@ -649,8 +688,6 @@ void fn2(void *args)
  //printQueues();
  printf("\nExecuting F2, ready queue id: %d\n", ready_queue->id);
  printf("\n The Argument Obtained is: %d", args);
- MySemaphoreSignal(&sem);
- printf("\nF2 Semaphore has Value: %d", sem.semaphoreValue);
  MySemaphoreWait(&sem);
  //printQueues();
  printf("\nF2 Semaphore has Value: %d", sem.semaphoreValue);
@@ -665,8 +702,14 @@ void fn3(void *args)
  MySemaphoreSignal(&sem);
  printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
  MySemaphoreSignal(&sem);
+ printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
+ MySemaphoreSignal(&sem);
+ printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
+ MySemaphoreSignal(&sem);
+
+
+ printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
  printQueues();
- printf("\nSF3 emaphore has Value: %d", sem.semaphoreValue);
 }
 
 
