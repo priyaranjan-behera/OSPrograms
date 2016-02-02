@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "thread_library.h"
+#include "thread_library"
 
 int mode = 0;
 

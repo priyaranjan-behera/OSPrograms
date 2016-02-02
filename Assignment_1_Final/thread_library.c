@@ -771,8 +771,6 @@ start = 1;
  	printf("completed\n");
  	printQueues();
  	printf("Final Queue Remains: ");
- 	MySemaphoreDestroy(sem1);
- 	MySemaphoreDestroy(sem2);
  	printQueues();
 
 }
@@ -857,9 +855,3 @@ int fn1()
 
 }
 
-int main(int argc, char *argv[])
-{
-	
-	MyThreadInit(&fn1, NULL);
- 	exit(0);
-}
