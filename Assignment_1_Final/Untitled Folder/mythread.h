@@ -41,6 +41,8 @@ void MyThreadJoinAll(void);
 // Terminate invoking thread
 void MyThreadExit(void);
 
+void printQueues(void);
+
 // ****** SEMAPHORE OPERATIONS ****** 
 // Create a semaphore
 MySemaphore MySemaphoreInit(int initialValue);

@@ -27,7 +27,7 @@ typedef void *MySemaphore;
 
 // ****** THREAD OPERATIONS ****** 
 // Create a new thread.
-MyThread MyThreadCreate(void(*start_funct)(void *), void *args);
+MyThread* MyThreadCreate(void(*start_funct)(void *), void *args);
 
 // Yield invoking thread
 void MyThreadYield(void);
@@ -40,6 +40,8 @@ void MyThreadJoinAll(void);
 
 // Terminate invoking thread
 void MyThreadExit(void);
+
+void printQueues()'
 
 // ****** SEMAPHORE OPERATIONS ****** 
 // Create a semaphore

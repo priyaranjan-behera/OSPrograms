@@ -385,7 +385,7 @@ MyThread MyThreadCreate (void(*start_funct)(void *), void *args) //Finalizes Cre
 	printf("\nHi, this is the %d thread getting created, my parent is: %d", child->id, ready_queue->id);
 	printf("Before Returning");
 	printQueues();
-	return ret;
+	return;
 }
 
 void MyThreadYield(void) // Finalized Yield Function

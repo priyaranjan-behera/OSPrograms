@@ -34,6 +34,7 @@ void fib(void *in)
 {
     MyThreadCreate(fib2, (void*)in);
     printf("Before Creating Child2");
+    printQueues();
     MyThreadCreate(fib2, (void*)in);
     // after creating children, wait for them to finish
     MyThreadJoinAll();

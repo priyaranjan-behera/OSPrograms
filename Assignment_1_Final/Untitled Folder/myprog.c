@@ -24,11 +24,6 @@ typedef struct MySemaphore {
 	struct MySemaphore * next;
 } MySemaphore;
 
-MySemaphore semaphores[100];
-
-MySemaphore sem1, sem2;
-MySemaphore* temp;
-
 MyThread* ready_queue;
 MyThread* blocked_queue;
 MyThread* semaphore_blocked_queue;
