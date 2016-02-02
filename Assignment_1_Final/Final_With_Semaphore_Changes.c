@@ -21,15 +21,18 @@ typedef struct MyThread {
 typedef struct MySemaphore {
 	int semaphoreId;
 	int semaphoreValue;
+	struct MySemaphore * next;
 } MySemaphore;
 
 MySemaphore semaphores[100];
 
-MySemaphore sem;
+MySemaphore sem1, sem2;
+MySemaphore* temp;
 
 MyThread* ready_queue;
 MyThread* blocked_queue;
 MyThread* semaphore_blocked_queue;
+MySemaphore* semaphore_queue;
 
 MyThread controller;
 
@@ -85,6 +88,21 @@ void printQueues()
 
 
 		printf("\nThe Total Count of Thread in Semaphore Block_Queue is %d", cnt);
+		printf("\n*********************************");
+
+		MySemaphore* sem_trial = semaphore_queue;
+		cnt = 0;
+		printf("\n*********************************");
+		printf("\nPrinting Semaphore BQueue at Start: ");
+		while(sem_trial != NULL)
+		{	
+			printf(" (%d - Semaphore Id- Sem Value: %d) ", sem_trial->semaphoreId, sem_trial->semaphoreValue);
+			sem_trial = sem_trial->next;
+			cnt++;
+		}
+
+
+		printf("\nThe Total Count of Thread in Semaphore Queue is %d", cnt);
 		printf("\n*********************************");
 }
 
@@ -159,6 +177,65 @@ void insertIntoSemaphoreBlockedQueue(MyThread* newNode)
 	trav->next->next = NULL;	
 }
 
+void insertIntoSemaphoreQueue(MySemaphore* newNode)
+{
+
+	//printf("\n Inserting to Block Queue. Thread: %d", newNode->id);
+	//printf("\n This Thread is waiting on: ");
+	
+	if(semaphore_queue == NULL)
+	{
+		semaphore_queue = newNode;
+		semaphore_queue->next = NULL;
+		return;
+	}
+	
+	MySemaphore* trav;
+	trav = semaphore_queue;
+	while(trav->next != NULL)
+		trav = trav->next;
+	trav->next = newNode;
+	trav->next->next = NULL;	
+}
+
+MySemaphore* getSemaphoreFromId(int id)
+{
+	MySemaphore* trav = semaphore_queue;
+	while(trav != NULL)
+	{
+		if(trav->semaphoreId == id)
+			return trav;
+		trav = trav->next;
+	}
+
+	return NULL;
+}
+
+int deleteSemaphore(int id)
+{
+	printf("Inside Delete Semaphore");
+	if(semaphore_queue == NULL)
+		return 0;
+
+	if(semaphore_queue->semaphoreId == id)
+	{
+		semaphore_queue = semaphore_queue->next;
+		return 1;
+	} 
+
+	MySemaphore* trav = blocked_queue;
+	while(trav->next != NULL)
+	{
+		if(trav->next->semaphoreId == id)
+		{
+			trav->next = trav->next->next;
+			return 1;
+		}
+		trav = trav->next;
+	}
+	return 0;
+}
+
 
 void insertIntoReadyQueue(MyThread* newNode)
 {
@@ -188,7 +265,7 @@ int MyThreadJoin(MyThread thread)
 	if (thread.parent != ready_queue->id)
 		return -1; 
 	if (!presentInReadyQueue(thread.id)) 
-		return 1;
+		return 0;
 
 	memset(&(ready_queue->blockedFor[0]), 0, sizeof((ready_queue->blockedFor)));
 	ready_queue->blockedFor[0] = thread.id;
@@ -201,7 +278,7 @@ int MyThreadJoin(MyThread thread)
 	//printQueues();
 	swapcontext(&temp->context, &ready_queue->context);
 
-	return 1;
+	return 0;
 }
 
 void MyThreadJoinAll()
@@ -316,13 +393,14 @@ MySemaphore MySemaphoreInit(int initialValue)
 	if(initialValue < 0)
 	{
 		printf("Didn't create a semaphore. Improper Initial Value");
-		return;
+		return NULL;
 	}
 	
 	MySemaphore *sem = malloc(sizeof(MySemaphore)); 
 	sem->semaphoreId = semCount++;
 	sem->semaphoreValue = initialValue;
-	
+
+	insertIntoSemaphoreQueue(sem);
 	
 	return *sem;
 	
@@ -336,6 +414,7 @@ int HasWaitingThreads(MySemaphore sem)
 	{
 		if(trav->semaphoreBlocked == sem.semaphoreId)
 			return 1;
+		trav = trav->next;
 	}
 	
 	return 0;
@@ -343,13 +422,26 @@ int HasWaitingThreads(MySemaphore sem)
 
 int MySemaphoreDestroy(MySemaphore sem)
 {
+	printf("Inside Semaphore Destroy\n");
 	if(HasWaitingThreads(sem))
+	{
+		printf("\nCan't delete, waiting threads");
 		return -1;
-	return 1;
+	}	
+	if(deleteSemaphore(sem.semaphoreId))
+	{
+		printf("\nDeleted");
+		return 0;
+	}
+	else
+	{
+		printf("\nCan't delete, unknown reason");
+		return -1;
+	}
 	
 }
 
-void MySemaphoreSignal(MySemaphore* sem)
+void MySemaphoreSignal(MySemaphore semaphore)
 {
 
 	/*The queue of S has no waiting thread 
@@ -357,6 +449,7 @@ The counter of S is increased by one and the thread resumes its execution.
 The queue of S has waiting threads 
 In this case, the counter of S must be zero (see the discussion of Wait above). One of the waiting threads will be allowed to leave the queue and resume its execution. The thread that executes Signal also continues.*/
 
+	MySemaphore* sem = getSemaphoreFromId(semaphore.semaphoreId);
 	sem->semaphoreValue++;
 	if(sem->semaphoreValue <= 0)
 	{
@@ -410,7 +503,7 @@ void RemoveFromSemaphoreBlocked(MySemaphore* sem)
 
 
 
-void MySemaphoreWait(MySemaphore* sem)
+void MySemaphoreWait(MySemaphore semaphore)
 {
 
 	/*The counter of S is positive 
@@ -418,7 +511,7 @@ In this case, the counter is decreased by 1 and the thread resumes its execution
 The counter of S is zero 
 In this case, the thread is suspended and put into the private queue of S.*/
 	
-
+	MySemaphore* sem = getSemaphoreFromId(semaphore.semaphoreId);
 	//capture the context here (1)
 	printf("\nTP1");
 	ucontext_t currentContext;
@@ -676,7 +769,10 @@ start = 1;
 		}
 	}
  	printf("completed\n");
+ 	printQueues();
  	printf("Final Queue Remains: ");
+ 	MySemaphoreDestroy(sem1);
+ 	MySemaphoreDestroy(sem2);
  	printQueues();
 
 }
@@ -688,9 +784,14 @@ void fn2(void *args)
  //printQueues();
  printf("\nExecuting F2, ready queue id: %d\n", ready_queue->id);
  printf("\n The Argument Obtained is: %d", args);
- MySemaphoreWait(&sem);
+ MySemaphoreWait(sem1);
+ MySemaphoreWait(sem2);
  //printQueues();
- printf("\nF2 Semaphore has Value: %d", sem.semaphoreValue);
+ temp = getSemaphoreFromId(sem1.semaphoreId);
+ printf("\nF2 Semaphore ID: %d has Value: %d", temp->semaphoreId,temp->semaphoreValue);
+
+ temp = getSemaphoreFromId(sem2.semaphoreId);
+ printf("\nF2 Semaphore ID: %d has Value: %d", temp->semaphoreId,temp->semaphoreValue);
 }
 
 void fn3(void *args)
@@ -699,16 +800,32 @@ void fn3(void *args)
  printQueues();
  printf("\nExecuting F3, ready queue id: %d\n", ready_queue->id);
  printf("\n The Argument Obtained is: %d", args);
- MySemaphoreSignal(&sem);
- printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
- MySemaphoreSignal(&sem);
- printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
- MySemaphoreSignal(&sem);
- printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
- MySemaphoreSignal(&sem);
 
+ MySemaphoreSignal(sem1);
+ temp = getSemaphoreFromId(sem1.semaphoreId);
+ printf("\nF3 Semaphore ID: %d has Value: %d", temp->semaphoreId,temp->semaphoreValue);
+ MySemaphoreSignal(sem2);
+ temp = getSemaphoreFromId(sem2.semaphoreId);
+ printf("\nF3 Semaphore ID: %d has Value: %d", temp->semaphoreId,temp->semaphoreValue);
+ MySemaphoreSignal(sem1);
+ temp = getSemaphoreFromId(sem1.semaphoreId);
+ printf("\nF3 Semaphore ID: %d has Value: %d", temp->semaphoreId,temp->semaphoreValue);
+ MySemaphoreSignal(sem2);
 
- printf("\nF3 Semaphore has Value: %d", sem.semaphoreValue);
+ temp = getSemaphoreFromId(sem2.semaphoreId);
+ printf("\nF3 Semaphore ID: %d has Value: %d", temp->semaphoreId,temp->semaphoreValue);
+ MySemaphoreSignal(sem2);
+
+  temp = getSemaphoreFromId(sem2.semaphoreId);
+ printf("\nF3 Semaphore ID: %d has Value: %d", temp->semaphoreId,temp->semaphoreValue);
+ MySemaphoreSignal(sem2);
+
+  temp = getSemaphoreFromId(sem2.semaphoreId);
+ printf("\nF3 Semaphore ID: %d has Value: %d", temp->semaphoreId,temp->semaphoreValue);
+ MySemaphoreSignal(sem2);
+
+ temp = getSemaphoreFromId(sem2.semaphoreId);
+ printf("\nF3 Semaphore ID: %d has Value: %d", temp->semaphoreId,temp->semaphoreValue);
  printQueues();
 }
 
@@ -719,8 +836,15 @@ int fn1()
  printf("\nExecuting F1, ready queue id: %d\n", ready_queue->id);
  printf("\n N = %d", n);
  printf("\n &N = %d", &n);
- sem = MySemaphoreInit(0);
- printf("\nSemaphore has Initial Value: %d", sem.semaphoreValue);
+ sem1 = MySemaphoreInit(2);
+ sem2 = MySemaphoreInit(0);
+ printf("CPAfterSemaphoreCreation");
+ printQueues();
+ printf("\nGetting SemaphoreId: %d",sem1.semaphoreId);
+ temp = getSemaphoreFromId(sem1.semaphoreId);
+ printf("\nF2 Semaphore ID: %d has Value: %d", temp->semaphoreId,temp->semaphoreValue);
+ temp = getSemaphoreFromId(sem2.semaphoreId);
+ printf("\nF2 Semaphore ID: %d has Value: %d", temp->semaphoreId,temp->semaphoreValue);
  child2 = MyThreadCreate((void*)fn2, &n);
  child2 = MyThreadCreate((void*)fn2, &n);
  child2 = MyThreadCreate((void*)fn3, &n);
@@ -730,6 +854,7 @@ int fn1()
  MyThreadJoinAll();
  printf("\nthis is from 1_2\n");
  printf("If printed, %d has joined successfully", ready_queue->id);
+
 }
 
 int main(int argc, char *argv[])

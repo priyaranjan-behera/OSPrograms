@@ -1,0 +1,230 @@
+
+Starting Checking of Unblocking
+Printing Ready Queue at Start:  0 
+The Total Count of Thread in Ready_Queue is 1
+*********************************
+*********************************
+Printing Block Queue at Start: 
+The Total Count of Thread in Block_Queue is 0
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************CP1
+Executing F1, ready queue id: 0
+
+ N = 10
+ &N = 26133284
+Semaphore has Initial Value: 0
+this is from 1_1
+
+ Joining the threads: parent 0(won't run again), child 4
+Executing F2, ready queue id: 1
+
+ The Argument Obtained is: 26133284
+TP1
+TP1
+ Semaphore Id: 0
+ Semaphore Value: 0
+TP2
+Printing Ready Queue at Start:  1  2  3  4 
+The Total Count of Thread in Ready_Queue is 4
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************
+ Semaphore Value: -1
+Printing Ready Queue at Start:  1  2  3  4 
+The Total Count of Thread in Ready_Queue is 4
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************
+TP2
+TP2
+TP3
+Executing F2, ready queue id: 2
+
+ The Argument Obtained is: 26133284
+TP1
+TP1
+ Semaphore Id: 0
+ Semaphore Value: -1
+TP2
+Printing Ready Queue at Start:  2  3  4 
+The Total Count of Thread in Ready_Queue is 3
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start:  (1 - Blocked for Sem Id: 0) 
+The Total Count of Thread in Semaphore Block_Queue is 1
+*********************************
+ Semaphore Value: -2
+Printing Ready Queue at Start:  2  3  4 
+The Total Count of Thread in Ready_Queue is 3
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start:  (1 - Blocked for Sem Id: 0) 
+The Total Count of Thread in Semaphore Block_Queue is 1
+*********************************
+TP2
+TP2
+TP3
+Printing Ready Queue at Start:  3  4 
+The Total Count of Thread in Ready_Queue is 2
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start:  (1 - Blocked for Sem Id: 0)  (2 - Blocked for Sem Id: 0) 
+The Total Count of Thread in Semaphore Block_Queue is 2
+*********************************
+Executing F3, ready queue id: 3
+
+ The Argument Obtained is: 26133284Yes, there are some threads waitingCP1CP2
+ Blocked Queue Head Waiting on: 0, Signal got for sem: 0CP3Yayyy! Unblocked through signal, Thread Id: 1
+
+F3 Semaphore has Value: -1Yes, there are some threads waitingCP1CP2
+ Blocked Queue Head Waiting on: 0, Signal got for sem: 0CP3Yayyy! Unblocked through signal, Thread Id: 2
+
+F3 Semaphore has Value: 0
+F3 Semaphore has Value: 1
+F3 Semaphore has Value: 2
+Printing Ready Queue at Start:  3  4  1  2 
+The Total Count of Thread in Ready_Queue is 4
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************
+Starting Checking of Unblocking
+Printing Ready Queue at Start:  3  4  1  2 
+The Total Count of Thread in Ready_Queue is 4
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************CP1CP2CPPRQ
+Flagged 1CP3CPPRQ
+Executing F2, ready queue id: 4
+
+ The Argument Obtained is: 26133284
+TP1
+TP1
+ Semaphore Id: 0
+ Semaphore Value: 2
+F2 Semaphore has Value: 1
+Starting Checking of Unblocking
+Printing Ready Queue at Start:  4  1  2 
+The Total Count of Thread in Ready_Queue is 3
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************CP1CP2CPPRQ
+Flagged 1CP3CPPRQ
+TP1
+ Semaphore Id: 0
+ Semaphore Value: 1
+F2 Semaphore has Value: 0
+Starting Checking of Unblocking
+Printing Ready Queue at Start:  1  2 
+The Total Count of Thread in Ready_Queue is 2
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************CP1CP2CPPRQ
+Flagged 1CP3CPPRQ
+TP1
+ Semaphore Id: 0
+ Semaphore Value: 0
+TP2
+Printing Ready Queue at Start:  2 
+The Total Count of Thread in Ready_Queue is 1
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************
+ Semaphore Value: -1
+Printing Ready Queue at Start:  2 
+The Total Count of Thread in Ready_Queue is 1
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************
+TP2
+TP2
+TP3
+F2 Semaphore has Value: -1
+Starting Checking of Unblocking
+Printing Ready Queue at Start: 
+The Total Count of Thread in Ready_Queue is 0
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start:  (2 - Blocked for Sem Id: 0) 
+The Total Count of Thread in Semaphore Block_Queue is 1
+*********************************CP1CP2CPPRQCPPSBQCPPRQCPPSBQCPPSBQ-Returing 1
+Flagged 1CP3CPPRQCPPSBQCPPRQCPPSBQCPPSBQ-Returing 1
+Flagged 1Yayy! it works!completed
+Final Queue Remains: 
+Printing Ready Queue at Start: 
+The Total Count of Thread in Ready_Queue is 0
+*********************************
+*********************************
+Printing Block Queue at Start:  0 
+The Total Count of Thread in Block_Queue is 1
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start:  (2 - Blocked for Sem Id: 0) 
+The Total Count of Thread in Semaphore Block_Queue is 1
+*********************************
