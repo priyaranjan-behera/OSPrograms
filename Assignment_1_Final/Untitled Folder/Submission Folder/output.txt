@@ -1,0 +1,110 @@
+
+About to Start Checking of Unblocking
+*********************************
+Printing Ready Queue at Start:  0 
+The Total Count of Thread in Ready_Queue is 1
+*********************************
+*********************************
+Printing Block Queue at Start: 
+The Total Count of Thread in Block_Queue is 0
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************
+*********************************
+Printing Semaphore BQueue at Start: 
+The Total Count of Thread in Semaphore Queue is 0
+*********************************
+Starting Checking of Unblocking
+*********************************
+Printing Ready Queue at Start:  0 
+The Total Count of Thread in Ready_Queue is 1
+*********************************
+*********************************
+Printing Block Queue at Start: 
+The Total Count of Thread in Block_Queue is 0
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************
+*********************************
+Printing Semaphore BQueue at Start: 
+The Total Count of Thread in Semaphore Queue is 0
+*********************************CP1
+Checked for Block
+*********************************
+Printing Ready Queue at Start:  0 
+The Total Count of Thread in Ready_Queue is 1
+*********************************
+*********************************
+Printing Block Queue at Start: 
+The Total Count of Thread in Block_Queue is 0
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************
+*********************************
+Printing Semaphore BQueue at Start: 
+The Total Count of Thread in Semaphore Queue is 0
+*********************************t0 start 4
+t0 create
+t0 start 3
+t0 create
+t0 start 2
+t0 create
+t0 start 1
+t0 create
+t0 start 0
+t0 end
+
+*********************************
+Printing Ready Queue at Start:  4 
+The Total Count of Thread in Ready_Queue is 1
+*********************************
+*********************************
+Printing Block Queue at Start:  (0 - Waiting for 1)  (1 - Waiting for 2)  (2 - Waiting for 3)  (3 - Waiting for 4) 
+The Total Count of Thread in Block_Queue is 4
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************
+*********************************
+Printing Semaphore BQueue at Start: 
+The Total Count of Thread in Semaphore Queue is 0
+*********************************
+About to Start Checking of Unblocking
+*********************************
+Printing Ready Queue at Start:  4 
+The Total Count of Thread in Ready_Queue is 1
+*********************************
+*********************************
+Printing Block Queue at Start:  (0 - Waiting for 1)  (1 - Waiting for 2)  (2 - Waiting for 3)  (3 - Waiting for 4) 
+The Total Count of Thread in Block_Queue is 4
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************
+*********************************
+Printing Semaphore BQueue at Start: 
+The Total Count of Thread in Semaphore Queue is 0
+*********************************
+Starting Checking of Unblocking
+*********************************
+Printing Ready Queue at Start:  4 
+The Total Count of Thread in Ready_Queue is 1
+*********************************
+*********************************
+Printing Block Queue at Start:  (0 - Waiting for 1)  (1 - Waiting for 2)  (2 - Waiting for 3)  (3 - Waiting for 4) 
+The Total Count of Thread in Block_Queue is 4
+*********************************
+*********************************
+Printing Semaphore Block Queue at Start: 
+The Total Count of Thread in Semaphore Block_Queue is 0
+*********************************
+*********************************
+Print
