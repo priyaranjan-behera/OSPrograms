@@ -32,10 +32,17 @@ void fib2(void *in)
 
 void fib(void *in)
 {
-    MyThreadCreate(fib2, (void*)in);
-    printf("Before Creating Child2");
-    printQueues();
-    MyThreadCreate(fib2, (void*)in);
+    MySemaphore sem;
+    sem = MySemaphoreInit(10);
+    MySemaphoreSignal(sem);
+    MyThread2 thr;
+    thr = (MyThread2)MyThreadCreate((void *)fib2, NULL);
+    thr = (MyThread2)MyThreadCreate((void *)fib2, NULL);
+    MyThreadJoin(thr);
+    MyThreadYield();
+
+    MyThreadCreate((void *)fib2, NULL);
+   
     // after creating children, wait for them to finish
     MyThreadJoinAll();
     //  write to addr n_ptr points; return results in addr pointed to

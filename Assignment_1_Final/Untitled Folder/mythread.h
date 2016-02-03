@@ -24,10 +24,12 @@
 //		MyThread parameter_name = (MyThread)internal_name;
 typedef void *MyThread;
 typedef void *MySemaphore;
+typedef void *MyThread2;
 
 // ****** THREAD OPERATIONS ****** 
 // Create a new thread.
-MyThread* MyThreadCreate(void(*start_funct)(void *), void *args);
+MyThread2 MyThreadCreate(void(*start_funct)(void *), void *args);
+
 
 // Yield invoking thread
 void MyThreadYield(void);

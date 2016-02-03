@@ -2,12 +2,13 @@
 #include<stdlib.h>
 #include<ucontext.h>
 #include<string.h>
+
 #define MEM 8000
 #define ARR_SIZE 10
 
-int threadCount = 0;
-int semCount = 0;
-int start;
+static int threadCount = 0;
+static int semCount = 0;
+static int start;
 
 typedef struct MyThread {
     ucontext_t context;
@@ -18,23 +19,23 @@ typedef struct MyThread {
     int semaphoreBlocked;
 } MyThread;
 
+typedef struct MyThread2 {
+    int id;
+    int parent;
+} MyThread2;
+
 typedef struct MySemaphore {
 	int semaphoreId;
 	int semaphoreValue;
 	struct MySemaphore * next;
 } MySemaphore;
 
-MySemaphore semaphores[100];
+static MyThread* ready_queue;
+static MyThread* blocked_queue;
+static MyThread* semaphore_blocked_queue;
+static MySemaphore* semaphore_queue;
 
-MySemaphore sem1, sem2;
-MySemaphore* temp;
-
-MyThread* ready_queue;
-MyThread* blocked_queue;
-MyThread* semaphore_blocked_queue;
-MySemaphore* semaphore_queue;
-
-ucontext_t controller;
+static ucontext_t controller;
 
 void printQueues()
 {
@@ -271,8 +272,9 @@ int presentInReadyQueue(int id)
 	return 0;
 }
 
-int MyThreadJoin(MyThread thread)
+int MyThreadJoin(MyThread2 thread_light)
 {
+	
 	if (thread.parent != ready_queue->id)
 		return -1; 
 	if (!presentInReadyQueue(thread.id)) 
@@ -355,7 +357,7 @@ MyThread* moveNextNode(MyThread *head)
 	head = head->next;
 }
 
-MyThread MyThreadCreate (void(*start_funct)(void *), void *args) //Finalizes Create Thread Function
+MyThread2 MyThreadCreate (void(*start_funct)(void *), void *args) //Finalizes Create Thread Function
 {
 	printf("Entering Thread Create");
 	MyThread* child = insertNode(ready_queue);
@@ -373,19 +375,10 @@ MyThread MyThreadCreate (void(*start_funct)(void *), void *args) //Finalizes Cre
 	printQueues();
 	printf("\n The size of the mythread object is: %d",sizeof(*child));
 	printf("\n The size of the int is: %d",sizeof(int));
-
-	MyThread ret;
-	ret.id = child->id;
-	ret.parent = child->parent;
-
-	printf("\n The size of the ret is: %d",sizeof(ret));
-	printf("After Allocation");
-	printQueues();
-
-	printf("\nHi, this is the %d thread getting created, my parent is: %d", child->id, ready_queue->id);
-	printf("Before Returning");
-	printQueues();
-	return;
+	MyThread2 thr;
+	thr.id = threadCount-1;
+	thr.parent = ready_queue->id;
+	return ;
 }
 
 void MyThreadYield(void) // Finalized Yield Function
