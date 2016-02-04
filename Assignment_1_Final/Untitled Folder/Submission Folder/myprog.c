@@ -650,6 +650,8 @@ void CheckForUnblocking()
 	trav = blocked_queue;
 	while(trav != NULL)
 	{
+		//printf("CP1");
+		//printQueues();
 		flag = 0;
 		for(i=0; i<ARR_SIZE; i++)
 		{
@@ -670,9 +672,14 @@ void CheckForUnblocking()
 				break;
 			}
 		}
+		//printf("CP2");
+		//printQueues();
 		if(flag == 0)
 		{
-			printf("Before Inserting - id: %d", trav->id);
+			//printf("CP3");
+			//printQueues();
+			//printf("Before Inserting - id: %d", trav->id);
+			//printQueues();
 			temp = trav;
 			if(prev == trav)
 			{
@@ -684,7 +691,7 @@ void CheckForUnblocking()
 			{
 				trav = trav->next;
 			}
-			trav->next = trav->next->next;
+			//trav->next = trav->next->next;
 			insertIntoReadyQueue(temp);
 			////printf("Inserted Node");
 			////printf("\nUnblocking Node: %d", temp->id);
@@ -692,6 +699,8 @@ void CheckForUnblocking()
 		}
 		else
 		{
+			//printf("CP4");
+			//printQueues();
 			prev = trav;
 			trav = trav->next;
 		}
@@ -700,6 +709,8 @@ void CheckForUnblocking()
 
 	if(isReadyEmpty == 1)
 	{
+		printf("CP5");
+		printQueues();
 		printf("Yayy! it works!");
 		setcontext(&ready_queue->context);
 	}
