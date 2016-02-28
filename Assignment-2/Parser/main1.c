@@ -14,12 +14,12 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-void exececho(Cmd c);
+void exececho(Cmd c, int inPipeId, int outPipeId);
 int std_in, std_out, std_err;
 int currPipe;
 int pipes[20];
 
-static void prCmd(Cmd c, int* pipe_in, int* pipe_out)
+static void prCmd(Cmd c, int inPipeId, int outPipeId)
 {
   int i;
 
@@ -68,7 +68,8 @@ static void prCmd(Cmd c, int* pipe_in, int* pipe_out)
 
     if(strcmp(c->args[0], "echo") == 0)
     {
-      exececho(c);
+      printf("Executing echo: in and out pipes are: %d %d", inPipeId, outPipeId );
+      exececho(c, inPipeId, outPipeId);
     }
 
     if ( !strcmp(c->args[0], "end") )
@@ -82,7 +83,13 @@ static void prPipe(Pipe p)
 {
   int i = 0;
   Cmd c;
-   
+  int inPipeId, outPipeId;
+
+
+  currPipe = 0;
+  outPipeId = 0;
+  inPipeId = 0;
+
   if ( p == NULL )
     return;
 
@@ -91,14 +98,16 @@ static void prPipe(Pipe p)
     //printf("  Cmd #%d: ", ++i);
     if(c->in == Tpipe || c->in == TpipeErr)
     {
-      inPipePort = inPipe+1;
+      inPipeId = currPipe-1;
     }
     if(c->out == Tpipe || c->out == TpipeErr)
     {
-      outPipePort = outPipe;
+      outPipeId = currPipe;
+      pipe(pipes+(2*currPipe));
+      currPipe++;
     }   
 
-    prCmd(c, inPipe, outPipe);
+    prCmd(c, inPipeId, outPipeId);
   }
   //printf("End pipe\n");
   prPipe(p->next);
@@ -119,14 +128,14 @@ int main(int argc, char *argv[])
   }
 }
 
-void exececho(Cmd c, int* pipe_in, int* pipe_out)
+void exececho(Cmd c, int inPipeId, int outPipeId)
 {
   int newfd;
 
 
   if(fork() == 0)
     {  
-      redirection(c, int* pipe_in, int* pipe_out);
+      redirection(c, inPipeId, outPipeId);
 
       for (int i = 1; c->args[i] != NULL; i++ )
         printf("%s ", c->args[i]);
@@ -139,7 +148,7 @@ void exececho(Cmd c, int* pipe_in, int* pipe_out)
 
 }
 
-void redirection(Cmd c)
+void redirection(Cmd c, int inPipeId, int outPipeId)
 {
 
   int newfd; 
@@ -180,17 +189,40 @@ void redirection(Cmd c)
           perror(c->outfile); /* open failed */
           exit(1);
         }
-        dup2(newfd, 1); 
+        dup2(newfd, 1);
         dup2(newfd, 2);
         break;
       case Tpipe:
         printf("| ");
+        dup2((pipes+(2*outPipeId))[0],1);
+        close((pipes+(2*outPipeId))[1]);
         break;
       case TpipeErr:
         printf("|& ");
+        dup2((pipes+(2*outPipeId))[0],1);
+        dup2((pipes+(2*outPipeId))[0],2);
+        close((pipes+(2*outPipeId))[1]);
         break;
       default:
         fprintf(stderr, "Shouldn't get here\n");
+      }
+
+      if ( c->in != Tnil )
+      switch(c->in)
+      {
+        case Tin:
+        if ((newfd = open(c->infile, O_RDONLY)) < 0) {
+          perror(c->infile); /* open failed */
+          exit(1);
+        }
+        dup2(newfd, 0);
+        break;
+
+        case Tpipe:
+        printf("| ");
+        dup2((pipes+(2*inPipeId))[1],0);
+        close((pipes+(2*inPipeId))[0]);
+        break;
       }
 }
 
