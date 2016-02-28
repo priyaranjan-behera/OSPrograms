@@ -1,0 +1,5 @@
+TP3
+[1:hello,]
+hello
+End pipe
+armadillo% 

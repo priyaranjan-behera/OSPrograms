@@ -11,10 +11,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "parse.h"
+#include <stdlib.h>
+#include <fcntl.h>
 
 static void prCmd(Cmd c)
 {
   int i;
+  int newfd;
+
 
   if ( c ) {
     printf("%s%s ", c->exec == Tamp ? "BG " : "", c->args[0]);
@@ -24,12 +28,25 @@ static void prCmd(Cmd c)
       switch ( c->out ) {
       case Tout:
 	printf(">(%s) ", c->outfile);
+	if ((newfd = open(c->outfile, O_CREAT|O_TRUNC|O_WRONLY, 0644)) < 0) {
+		perror(c->outfile);	/* open failed */
+		exit(1);
+	}
+	printf("TP2\n");
+	dup2(newfd, 1); 
+	printf("TP3\n");
 	break;
       case Tapp:
 	printf(">>(%s) ", c->outfile);
 	break;
       case ToutErr:
 	printf(">&(%s) ", c->outfile);
+	if ((newfd = open(c->outfile, O_CREAT|O_TRUNC|O_WRONLY, 0644)) < 0) {
+		perror(c->outfile);	/* open failed */
+		exit(1);
+	}
+	dup2(newfd, 1); 
+	dup2(newfd, 2); 
 	break;
       case TappErr:
 	printf(">>&(%s) ", c->outfile);
@@ -85,7 +102,14 @@ int main(int argc, char *argv[])
   Pipe p;
   char *host = "armadillo";
 
+  int std_output = dup(1);
+  int std_error = dup(2);
+  int std_input = dup(3);
+
   while ( 1 ) {
+  	dup2(std_output,1);
+  	dup2(std_erorr,2);
+  	dup2(std_input,3);
     printf("%s%% ", host);
     p = parse();
     prPipe(p);
@@ -97,17 +121,21 @@ void exececho(Cmd c)
 {
 	if(fork() == 0)
  		{
- 			printf("\nCalling from Child. My ID: %d and my parent: %d",getpid(),getppid());
- 			for ( i = 1; c->args[i] != NULL; i++ )
-				printf("%s ", c->args[i]);
+
+		    
+
+ 			execvp("echo", c->args);
+ 			//printf("\nCalling from Child. My ID: %d and my parent: %d",getpid(),getppid());
+ 			//for ( i = 1; c->args[i] != NULL; i++ )
+			//	printf("%s ", c->args[i]);
 			
  			exit(0);
  		}
  		else
  		{
- 			printf("\nBW Calling from Parent. My Id: %d",getpid());
+ 			//printf("\nBW Calling from Parent. My Id: %d",getpid());
  			wait();
- 			printf("\nAW Calling from Parent. My Id: %d",getpid());
+ 			//printf("\nAW Calling from Parent. My Id: %d",getpid());
  			
  		}
 }

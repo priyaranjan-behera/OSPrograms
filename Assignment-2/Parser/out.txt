@@ -1,0 +1,1 @@
+>(out.txt) abc >>(out.txt) >(out.txt) abc 
