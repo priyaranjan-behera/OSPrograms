@@ -1,0 +1,9 @@
+main.c
+main.o
+Makefile
+parse.c
+parse.h
+parse.o
+README
+test.out
+ush

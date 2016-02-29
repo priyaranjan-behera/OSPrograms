@@ -24,6 +24,12 @@ int std_in, std_out, std_err;
 int currPipe;
 int pipes[20];
 
+void flushall()
+{
+  fflush(stdout);
+  fflush(stderr);
+}
+
 void backupIO()
 {
   std_in = dup(0);
@@ -84,13 +90,16 @@ static void prCmd(Cmd c, int inPipeId, int outPipeId)
     putchar('\n');
     */
     // this driver understands one command
-
-    if(strcmp(c->args[0], "echo") == 0)
+    if(!isBuiltinCommand(c))
+    {
+        execcommand(c, inPipeId, outPipeId);
+    }
+    else if(strcmp(c->args[0], "echo") == 0)
     {
       //printf("Executing echo: in and out pipes are: %d %d", inPipeId, outPipeId );
       exececho(c, inPipeId, outPipeId);
     }
-    if(strcmp(c->args[0], "pwd") == 0)
+    else if(strcmp(c->args[0], "pwd") == 0)
     {
       //printf("Executing echo: in and out pipes are: %d %d", inPipeId, outPipeId );
       execpwd(c, inPipeId, outPipeId);
@@ -105,10 +114,15 @@ static void prCmd(Cmd c, int inPipeId, int outPipeId)
       //printf("Executing getenv: in and out pipes are: %d %d", inPipeId, outPipeId );
       execcd(c, inPipeId, outPipeId);
     }
+    else if(strcmp(c->args[0], "where") == 0)
+    {
+      //printf("Executing getenv: in and out pipes are: %d %d", inPipeId, outPipeId );
+      execwhere(c, inPipeId, outPipeId);
+    }
     else if ( !strcmp(c->args[0], "end") )
       exit(0);
 
-    putchar('\n');
+    //putchar('\n');
   }
 }
 
@@ -132,15 +146,21 @@ static void prPipe(Pipe p)
     if(c->in == Tpipe || c->in == TpipeErr)
     {
       inPipeId = currPipe-1;
+      //printf("Setting In Pipe %d for command %s", inPipeId, c->args[0]);
     }
     if(c->out == Tpipe || c->out == TpipeErr)
     {
       outPipeId = currPipe;
       pipe(pipes+(2*currPipe));
       currPipe++;
+      //printf("Setting out Pipe %d for command %s", outPipeId, c->args[0]);
     }   
 
+  
+
+    //fprintf(stdout,"\nInitiating command: %s\n", c->args[0]);
     prCmd(c, inPipeId, outPipeId);
+    //fprintf(stdout,"\nReturning from command: %s\n", c->args[0]);
   }
   //printf("End pipe\n");
   prPipe(p->next);
@@ -151,16 +171,42 @@ int main(int argc, char *argv[])
   Pipe p;
   char host[25];
   gethostname(host, 25);
-
+  char* home=malloc(100);
+  int fdin;
   backupIO();
 
-  while ( 1 ) {
-    restoreIO();
+  home = getenv("HOME");
+  strcat(home, "/.ushrc");
+
+  if((fdin=open(home, O_RDONLY))==-1)
+    perror("OPEN USHRC"); 
+  else
+  {
+    dup2(fdin, 0);
+    close(fdin);
     printf("%s%% ", host);
+    fflush(stdout);
     p = parse();
     currPipe = 0;
     prPipe(p);
     freePipe(p);
+  }
+
+  
+  
+
+
+  while ( 1 ) {
+
+    restoreIO();
+    flushall();
+    printf("%s%% ", host);
+    fflush(stdout);
+    p = parse();
+    currPipe = 0;
+    prPipe(p);
+    freePipe(p);
+
   }
 }
 
@@ -168,25 +214,49 @@ void exececho(Cmd c, int inPipeId, int outPipeId)
 {
   int newfd;
 
-
-  if(fork() == 0)
-    {  
-      redirection(c, inPipeId, outPipeId);
+  if(c->next == NULL)
+  {
+    redirection(c, inPipeId, outPipeId);
 
       for (int i = 1; c->args[i] != NULL; i++ )
         printf("%s ", c->args[i]);
-      exit(0);
-    }
-    else
-    {
-      wait(); 
-    }
+      putchar('\n');
+  }
+  else
+  {
+    if(fork() == 0)
+      {  
+        redirection(c, inPipeId, outPipeId);
+
+        for (int i = 1; c->args[i] != NULL; i++ )
+          printf("%s ", c->args[i]);
+        putchar('\n');
+        exit(0);
+      }
+      else
+      {
+        wait(); 
+      }
+  }
 
 }
 
-boolean isBuiltinCommand(Cmd c)
+int isBuiltinCommand(Cmd c)
 {
-  
+
+  char *commands[] = {"echo", "pwd", "setenv", "cd", "end", "where"};
+  int i;
+  i=0;
+
+  for(i=0; i<6; i++)
+  {
+    if(strcmp(c->args[0], commands[i]) == 0)
+    {
+      return 1;
+    }
+  }
+
+  return 0;
 }
 
 void execsetenv(Cmd c, int inPipeId, int outPipeId)
@@ -207,6 +277,7 @@ void execsetenv(Cmd c, int inPipeId, int outPipeId)
         while(environ[i]) {
           printf("%s\n", environ[i++]);
         }
+        putchar('\n');
       }
       else{
         //printf("TP");
@@ -234,6 +305,7 @@ void execsetenv(Cmd c, int inPipeId, int outPipeId)
     //  wait(); 
     //}
 
+
   }
   else
   {
@@ -249,6 +321,7 @@ void execsetenv(Cmd c, int inPipeId, int outPipeId)
         while(environ[i]) {
           printf("%s\n", environ[i++]);
         }
+        putchar('\n');
       }
       else{
         //printf("TP");
@@ -295,56 +368,60 @@ void redirection(Cmd c, int inPipeId, int outPipeId)
           perror(c->outfile); /* open failed */
           exit(1);
         }
-        //fflush(1);
+        fflush(stdout);
         dup2(newfd, 1); 
         break;
       case Tapp:
-        printf(">>(%s) ", c->outfile);
-        printf(">(%s) ", c->outfile);
+        //printf(">>(%s) ", c->outfile);
+        //printf(">(%s) ", c->outfile);
       
         if ((newfd = open(c->outfile, O_CREAT|O_APPEND|O_WRONLY, 0644)) < 0) {
           perror(c->outfile); /* open failed */
           exit(1);
         }
-        //fflush(1);
+        fflush(stdout);
         dup2(newfd, 1); 
         break;
       case ToutErr:
-        printf(">&(%s) ", c->outfile);
+        //printf(">&(%s) ", c->outfile);
         if ((newfd = open(c->outfile, O_CREAT|O_TRUNC|O_WRONLY, 0644)) < 0) {
           perror(c->outfile); /* open failed */
           exit(1);
         }
-        //fflush(1);
-        //fflush(2);
+        fflush(stdout);
+        fflush(stderr);
         dup2(newfd, 1); 
         dup2(newfd, 2); 
         break;
       case TappErr:
-        printf(">>&(%s) ", c->outfile);
-        printf(">&(%s) ", c->outfile);
+        //printf(">>&(%s) ", c->outfile);
+        //printf(">&(%s) ", c->outfile);
         if ((newfd = open(c->outfile, O_CREAT|O_APPEND|O_WRONLY, 0644)) < 0) {
           perror(c->outfile); /* open failed */
           exit(1);
         }
-        //fflush(1);
-        //fflush(2);
+        fflush(stdout);
+        fflush(stderr);
         dup2(newfd, 1);
         dup2(newfd, 2);
         break;
       case Tpipe:
-        printf("| ");
-        //fflush(1);
-        dup2((pipes+(2*outPipeId))[1],1);
+        //printf("| ");
+        fflush(stdout);
         close((pipes+(2*outPipeId))[0]);
+        dup2((pipes+(2*outPipeId))[1],1);
+        close((pipes+(2*outPipeId))[1]);
+        
         break;
       case TpipeErr:
-        printf("|& ");
-        //fflush(1);
-        //fflush(2);
+        //printf("|& ");
+        fflush(stdout);
+        fflush(stderr);
+        close((pipes+(2*outPipeId))[0]);
         dup2((pipes+(2*outPipeId))[1],1);
         dup2((pipes+(2*outPipeId))[1],2);
-        close((pipes+(2*outPipeId))[0]);
+        close((pipes+(2*outPipeId))[1]);
+        
         break;
       default:
         fprintf(stderr, "Shouldn't get here\n");
@@ -354,18 +431,23 @@ void redirection(Cmd c, int inPipeId, int outPipeId)
       switch(c->in)
       {
         case Tin:
+        
         if ((newfd = open(c->infile, O_RDONLY)) < 0) {
           perror(c->infile); /* open failed */
           exit(1);
         }
         ////fflush(0);
+        //fprintf(stdout, "Yes! Inside file input \n" );
         dup2(newfd, 0);
+        close(newfd);
         break;
 
         case Tpipe:
-        printf("| ");
+        //printf("| ");
         ////fflush(0);
+        close((pipes+(2*inPipeId))[1]);
         dup2((pipes+(2*inPipeId))[0],0);
+        close((pipes+(2*inPipeId))[0]);
         /*
         printf("Got the data from pipe:");
         if ((n = read((pipes+(2*inPipeId))[0], buf, 1024)) >= 0) {
@@ -375,7 +457,7 @@ void redirection(Cmd c, int inPipeId, int outPipeId)
         
         */
 
-        close((pipes+(2*inPipeId))[1]);
+        
         break;
       }
 }
@@ -500,6 +582,7 @@ void execpwd(Cmd c, int inPipeId, int outPipeId)
 
       getcwd(cwd,sizeof(cwd));
       printf("%s", cwd);
+      putchar('\n');
 
 
   }
@@ -513,6 +596,7 @@ void execpwd(Cmd c, int inPipeId, int outPipeId)
       //printf("TP");
       getcwd(cwd,sizeof(cwd));
       printf("%s", cwd);
+      putchar('\n');
 
       exit(0);
     }
@@ -525,6 +609,166 @@ void execpwd(Cmd c, int inPipeId, int outPipeId)
 
 }
 
+void execcommand(Cmd c, int inPipeId, int outPipeId)
+{
+  char cwd[100];
+  pid_t  pid;
+  pid = fork();
+  int status;
+
+    if( pid == 0)
+    {  
+      redirection(c, inPipeId, outPipeId);
+      //printf("TP");
+      //if((c->args+1) != NULL)
+      //fprintf(std_out, "The command and arguments are: %s: %s\n", c->args[0], c->args[1]);
+      //flushall();
+      if(execvp(c->args[0], c->args) < 0)
+        perror("");
+      //else
+        //execvp(c->args[0]);  
+      //fprintf(stdout,"Processed Here\n");
+      fflush(stdout);
+      _exit(0);
+    }
+    else
+    {
+      close((pipes+(2*outPipeId))[1]);
+      while(wait(&status) != pid); 
+    }
+
+
+}
+
+
+
+void execwhere(Cmd c, int inPipeId, int outPipeId)
+{
+  int newfd;
+  int i=0;
+  char* str_path =  getenv("PATH");
+  char* str;
+  char* dir;
+  char path[20];
+
+  struct stat fileStat;
+
+  if(c->next == NULL)
+  {
+  //if(fork() == 0)
+  //  {  
+      redirection(c, inPipeId, outPipeId);
+      
+      str = strdup(str_path);
+      //printf("PATH:%s\n",str);
+      printf("%s:", c->args[1]);
+      while ((dir = strsep(&str, ":")))
+      {
+          strcpy(path, dir);  
+          strcat(path,"/");
+          strcat(path,c->args[1]);
+          //printf("dir:%s\n", path);
+          if(stat(path, &fileStat) == 0)
+          {
+            printf(" %s",path);
+          }
+      } 
+
+
+
+
+
+
+    //  exit(0);
+    //}
+    //else
+    //{
+    //  wait(); 
+    //}
+
+  }
+  else
+  {
+
+
+    if(fork() == 0)
+    {  
+      
+       redirection(c, inPipeId, outPipeId);
+        
+        str = strdup(str_path);
+        //printf("PATH:%s\n",str);
+        printf("%s:", c->args[1]);
+        while ((dir = strsep(&str, ":")))
+        {
+            strcpy(path, dir);  
+            strcat(path,"/");
+            strcat(path,c->args[1]);
+            //printf("dir:%s\n", path);
+            if(stat(path, &fileStat) == 0)
+            {
+              printf(" %s",path);
+            }
+        } 
+
+      exit(0);
+    }
+    else
+    {
+      wait(); 
+    }
+
+  }
+
+}
+
+/*
+char** str_split(char* a_str, const char a_delim) //Reference: stackoverflow: http://stackoverflow.com/questions/9210528/split-string-with-delimiters-in-c
+{
+    char** result    = 0;
+    size_t count     = 0;
+    char* tmp        = a_str;
+    char* last_comma = 0;
+    char delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    count += last_comma < (a_str + strlen(a_str) - 1);
+
+    count++;
+
+    result = malloc(sizeof(char*) * count);
+
+    if (result)
+    {
+        size_t idx  = 0;
+        char* token = strtok(a_str, delim);
+
+        while (token)
+        {
+            assert(idx < count);
+            *(result + idx++) = strdup(token);
+            token = strtok(0, delim);
+        }
+        assert(idx == count - 1);
+        *(result + idx) = 0;
+    }
+
+    return result;
+}
+
+*/
 
 
 /*........................ end of main.c ....................................*/

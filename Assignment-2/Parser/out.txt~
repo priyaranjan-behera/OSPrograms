@@ -1,1 +1,4 @@
-  Cmd #1: >(out.txt) hello   Cmd #1: >>(out.txt) >(out.txt) hello hi 
+
+echo abc
+echo xyz
+
