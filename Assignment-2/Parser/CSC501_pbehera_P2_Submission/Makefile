@@ -1,6 +1,6 @@
 # Makefile for ush
 #
-# Vincent W. Freeh
+# Priyaranjan Behera
 # 
 
 CC=gcc
@@ -12,7 +12,7 @@ ush:	$(OBJ)
 	$(CC) -o $@ $(OBJ)
 
 tar:
-	tar czvf ush.tar.gz $(SRC) Makefile README
+	tar czvf ush_pbehera.tar.gz $(SRC) Makefile README
 
 clean:
 	\rm $(OBJ) ush

@@ -1,6 +1,6 @@
 # Makefile for ush
 #
-# Vincent W. Freeh
+# Priyaranjan Behera
 # 
 
 CC=gcc

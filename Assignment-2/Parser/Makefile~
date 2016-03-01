@@ -5,8 +5,8 @@
 
 CC=gcc
 CFLAGS=-g
-SRC=main1.c parse.c parse.h
-OBJ=main1.o parse.o
+SRC=main.c parse.c parse.h
+OBJ=main.o parse.o
 
 ush:	$(OBJ)
 	$(CC) -o $@ $(OBJ)
