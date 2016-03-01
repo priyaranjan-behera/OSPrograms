@@ -235,6 +235,7 @@ void exececho(Cmd c, int inPipeId, int outPipeId)
       }
       else
       {
+        close((pipes+(2*outPipeId))[1]);
         wait(); 
       }
   }
@@ -346,6 +347,7 @@ void execsetenv(Cmd c, int inPipeId, int outPipeId)
     }
     else
     {
+      close((pipes+(2*outPipeId))[1]);
       wait(); 
     }
 
@@ -563,6 +565,7 @@ void execcd(Cmd c, int inPipeId, int outPipeId)
     }
     else
     {
+      close((pipes+(2*outPipeId))[1]);
       wait(); 
     }
 
@@ -602,6 +605,7 @@ void execpwd(Cmd c, int inPipeId, int outPipeId)
     }
     else
     {
+      close((pipes+(2*outPipeId))[1]);
       wait(); 
     }
 
@@ -715,6 +719,7 @@ void execwhere(Cmd c, int inPipeId, int outPipeId)
     }
     else
     {
+      close((pipes+(2*outPipeId))[1]);
       wait(); 
     }
 
