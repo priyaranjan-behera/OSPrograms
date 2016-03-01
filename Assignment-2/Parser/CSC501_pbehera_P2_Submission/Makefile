@@ -3,7 +3,7 @@
 # Priyaranjan Behera
 # 
 
-CC=gcc
+CC=gcc -std=c99
 CFLAGS=-g
 SRC=main1.c parse.c parse.h
 OBJ=main1.o parse.o

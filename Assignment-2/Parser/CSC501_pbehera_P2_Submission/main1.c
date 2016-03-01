@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sys/resource.h>
 #include <ctype.h>
+#include <unistd.h>
 
 extern char **environ;
 void exececho(Cmd c, int inPipeId, int outPipeId);
@@ -24,7 +25,7 @@ static char *env;
 
 int std_in, std_out, std_err;
 int currPipe;
-int pipes[20];
+int pipes[50];
 
 
 void flushall()
@@ -45,6 +46,31 @@ void restoreIO()
   dup2(std_in,0);
   dup2(std_out,1);
   dup2(std_err,2); 
+}
+
+int is_valid_int(const char *str)
+{
+   // Handle negative numbers.
+   //
+   if (*str == '-' || *str == '+')
+      ++str;
+
+   // Handle empty string or just "-".
+   //
+   if (!*str)
+      return 0;
+
+   // Check for non-digit chars in the rest of the stirng.
+   //
+   while (*str)
+   {
+      if (!isdigit(*str))
+         return 0;
+      else
+         ++str;
+   }
+
+   return 1;
 }
 
 static void prCmd(Cmd c, int inPipeId, int outPipeId)
@@ -678,8 +704,6 @@ void execwhere(Cmd c, int inPipeId, int outPipeId)
   char* dir;
   char path[20];
 
-  struct stat fileStat;
-
   if(c->next == NULL)
   {
   //if(fork() == 0)
@@ -697,7 +721,7 @@ void execwhere(Cmd c, int inPipeId, int outPipeId)
           strcat(path,"/");
           strcat(path,c->args[1]);
           //printf("dir:%s\n", path);
-          if(stat(path, &fileStat) == 0)
+          if(access(path, F_OK) == 0)
           {
             printf(" %s",path);
           }
@@ -738,7 +762,7 @@ void execwhere(Cmd c, int inPipeId, int outPipeId)
             strcat(path,"/");
             strcat(path,c->args[1]);
             //printf("dir:%s\n", path);
-            if(stat(path, &fileStat) == 0)
+            if(access(path, F_OK) == 0)
             {
               printf(" %s",path);
             }
@@ -852,6 +876,20 @@ void execnice(Cmd c, int inPipeId, int outPipeId)
           perror("Cannnot set priority");
         //fprintf(stderr, "The priority set is: %d\n", getpriority(which, pid));
       }
+      else if(is_valid_int(c->args[1]) == 0)
+      {
+        pid = getpid();
+        if(setpriority(which, pid, 4) == -1)
+          perror("Cannnot set priority");
+        //fprintf(stderr, "The priority set is: %d\n", getpriority(which, pid));
+        if(c->args[2] != NULL)
+        {
+          c->args+=1;
+          c->nargs-=1;
+          //fprintf(stderr, "The priority set is: %d for command: %s\n", getpriority(which, pid),c->args[0]);
+          prCmd(c, inPipeId, outPipeId);
+        }
+      }
       else{
 
         pid = getpid();
@@ -892,6 +930,20 @@ void execnice(Cmd c, int inPipeId, int outPipeId)
         if(setpriority(which, pid, 4) == -1)
           perror("Cannnot set priority");
         //fprintf(stderr, "The priority set is: %d\n", getpriority(which, pid));
+      }
+      else if(is_valid_int(c->args[1]) == 0)
+      {
+        pid = getpid();
+        if(setpriority(which, pid, 4) == -1)
+          perror("Cannnot set priority");
+        //fprintf(stderr, "The priority set is: %d\n", getpriority(which, pid));
+        if(c->args[2] != NULL)
+        {
+          c->args+=1;
+          c->nargs-=1;
+          //fprintf(stderr, "The priority set is: %d for command: %s\n", getpriority(which, pid),c->args[0]);
+          prCmd(c, inPipeId, outPipeId);
+        }
       }
       else{
 
