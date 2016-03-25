@@ -94,9 +94,11 @@ void main(int argc, char *argv[])
   int len;
   int32_t info;
   struct sockaddr_in sin, incoming;
+  struct hostent *ihp;
+  port = atoi(argv[2]);
   printf("\nTriggering Send Message By Host:: %s", str);
   fflush(stdout);
-  int lplayer, rplayer;
+  int lplayer, rplayer, p1;
   int master = createSendingSocket(str, port);
   len = send(master, buf, strlen(buf), 0);
   if ( len != strlen(buf) ) {
@@ -113,6 +115,7 @@ void main(int argc, char *argv[])
   perror("recv");
   exit(1);
   }
+  id = ntohl(info);
   printf("\nRecieved Id: %d", ntohl(info));
 
   len = recv(master, &info, sizeof(uint32_t), 0);
@@ -120,6 +123,7 @@ void main(int argc, char *argv[])
   perror("recv");
   exit(1);
   }
+  cport = ntohl(info);
   printf("\nRecieved CPORT: %d", ntohl(info));
 
   len = recv(master, &info, sizeof(uint32_t), 0);
@@ -127,6 +131,7 @@ void main(int argc, char *argv[])
   perror("recv");
   exit(1);
   }
+  lport = ntohl(info);
   printf("\nRecieved LPORT: %d", ntohl(info));
 
   len = recv(master, &info, sizeof(uint32_t), 0);
@@ -134,11 +139,23 @@ void main(int argc, char *argv[])
   perror("recv");
   exit(1);
   }
+  rport = ntohl(info);
   printf("\nRecieved RPORT: %d", ntohl(info));
 
 
   //Creating player specific port
   int playerport = createReceiveSocket(cport, (struct sockaddr_in *)&sin, 10);
+
+
+
+  //Sending readiness to master
+
+  info = htonl(1);
+    len = send(master, &info, sizeof(uint32_t), 0);
+    if ( len != sizeof(uint32_t) ) {
+        perror("send");
+        exit(1);
+      }
 
   //get a go ahead from master to connect to right and left players
   len = recv(master, &info, sizeof(uint32_t), 0);
@@ -152,6 +169,23 @@ void main(int argc, char *argv[])
 
   lplayer = createSendingSocket(str, lport);
   rplayer = createSendingSocket(str, rport);
+
+
+  while(1)
+  {
+      len = sizeof(sin);
+  p1 = accept(playerport, (struct sockaddr *)&incoming, &len);
+  if ( p1 < 0 ) {
+    perror("bind2:");
+    exit(p1);
+  }
+  ihp = gethostbyaddr((char *)&incoming.sin_addr, 
+      sizeof(struct in_addr), AF_INET);
+  printf(">> Connected to %s\n", ihp->h_name);
+  }
+
+
+  //neighbours have been connected.
 
 
 

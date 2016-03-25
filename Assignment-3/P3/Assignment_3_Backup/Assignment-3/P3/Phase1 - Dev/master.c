@@ -171,6 +171,17 @@ void main(int argc, char *argv[])
 
   }
 
+  //receive readiness from the players
+  for(int i=0; i<nplayers; i++) // Delivering Go Ahead
+  {
+    len = recv(p[i], &info, sizeof(uint32_t), 0);
+    if ( len < 0 ) {
+    perror("recv");
+    exit(1);
+    }
+    printf("\nRecieved Readiness: %d", ntohl(info));
+  }
+
   for(int i=0; i<nplayers; i++) // Delivering Go Ahead
   {
     info = htonl(1);
@@ -180,6 +191,19 @@ void main(int argc, char *argv[])
         exit(1);
       }
   }
+
+
+
+  //Create new sockets to connect to the player's waiting port
+  //to announce start and termination of the game
+
+  for(int i=0; i<nplayers; i++)
+  {
+    newsockets[i] = createSendingSocket(str, port + i + 1);
+  }
+
+
+
 
   printf("Processing Ends");
   fflush(stdout);
