@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#define LEN	64
+#define LEN	2048
 
 int createSendingSocket(char* hostname, int port)
 {
@@ -90,15 +90,16 @@ void main(int argc, char *argv[])
 {
   char *str = argv[1];
   char buf[LEN] = "Player Reporting";
-  int cport, lport, rport, id, port = 8888;
+  int cport, lport, rport, nport, id, port = 8888;
   int len;
   int32_t info;
   struct sockaddr_in sin, incoming;
   struct hostent *ihp;
+  int messageType, hopsLeft;
   port = atoi(argv[2]);
   printf("\nTriggering Send Message By Host:: %s", str);
   fflush(stdout);
-  int lplayer, rplayer, p1;
+  int p1, player;
   int master = createSendingSocket(str, port);
   len = send(master, buf, strlen(buf), 0);
   if ( len != strlen(buf) ) {
@@ -107,7 +108,7 @@ void main(int argc, char *argv[])
     }
   printf("\nSent Message");
   printf("\nReady to receive message: ");
-  memset(&buf[0], 0, sizeof(buf));
+  memset(&buf[0], 0, LEN);
 
 
   len = recv(master, &info, sizeof(uint32_t), 0);
@@ -167,21 +168,104 @@ void main(int argc, char *argv[])
 
   //After this go ahead. Lets connect this node to the left and right nodes.
 
-  lplayer = createSendingSocket(str, lport);
-  rplayer = createSendingSocket(str, rport);
-
+  
+  //lplayer = createSendingSocket(str, lport);
+  //rplayer = createSendingSocket(str, rport);
+  close(master);
 
   while(1)
   {
-      len = sizeof(sin);
-  p1 = accept(playerport, (struct sockaddr *)&incoming, &len);
-  if ( p1 < 0 ) {
-    perror("bind2:");
-    exit(p1);
-  }
-  ihp = gethostbyaddr((char *)&incoming.sin_addr, 
+    len = sizeof(sin);
+    p1 = accept(playerport, (struct sockaddr *)&incoming, &len);
+    if ( p1 < 0 ) {
+      perror("bind2:");
+      exit(p1);
+    }
+    ihp = gethostbyaddr((char *)&incoming.sin_addr, 
       sizeof(struct in_addr), AF_INET);
-  printf(">> Connected to %s\n", ihp->h_name);
+    printf(">> Connected to %s\n", ihp->h_name);
+
+
+    //Read the data
+
+    len = recv(p1, &info, sizeof(uint32_t), 0);
+    if ( len < 0 ) {
+    perror("recv");
+    exit(1);
+    }
+    messageType = ntohl(info);
+    printf("\nRecieved Message Type: %d", ntohl(info));
+    if(messageType == 2)
+      exit(0);
+
+
+    len = recv(p1, &info, sizeof(uint32_t), 0);
+    if ( len < 0 ) {
+    perror("recv");
+    exit(1);
+    }
+    hopsLeft = ntohl(info);
+    printf("\nRecieved Hops Left: %d", ntohl(info));
+
+    memset(&buf[0], 0, LEN);
+    len = recv(p1, buf, LEN, 0);
+    if ( len < 0 ) {
+    perror("recv");
+    exit(1);
+    }
+    printf("\n%s - Received Sequence\n", buf);
+
+    if(hopsLeft == 1)
+    {
+      //todo
+      sprintf(buf, "%s -> %d", buf, id);
+      printf("\nFinal Sequence from Player: %s\n", buf);
+      
+      master = createSendingSocket(str, port);
+      len = send(master, buf, strlen(buf), 0);
+      if ( len != strlen(buf) ) {
+          perror("send");
+          exit(1);
+        }
+      continue;
+    }
+
+
+    if(rand() % 2 == 0)
+      nport = lport;
+    else
+      nport = rport;
+
+    player = createSendingSocket(str, nport);
+    info = htonl(1);
+    len = send(player, &info, sizeof(uint32_t), 0);
+    if ( len != sizeof(uint32_t) ) {
+        perror("send");
+        exit(1);
+      }
+
+
+    info = htonl(hopsLeft-1);
+    len = send(player, &info, sizeof(uint32_t), 0);
+    if ( len != sizeof(uint32_t) ) {
+        perror("send");
+        exit(1);
+      }
+
+    sprintf(buf, "%s -> %d", buf, id);
+      
+    len = send(player, buf, strlen(buf), 0);
+    if ( len != strlen(buf) ) {
+        perror("send");
+        exit(1);
+      }
+
+    close(player);
+
+
+    close(p1);
+
+
   }
 
 

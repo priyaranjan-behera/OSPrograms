@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#define LEN	64
+#define LEN	2048
 
 int createSendingSocket(char* hostname, int port)
 {
@@ -89,9 +89,9 @@ int createReceiveSocket(int port, struct sockaddr_in* sin, int nplayers)
 
 void main(int argc, char *argv[])
 {
-  char *str = argv[1];
+  char str[LEN];
   int lport, rport, cport, port = 8888;
-  int len, p[LEN], i, nplayers, nport, nhops, newsockets[LEN];
+  int len, p[LEN], i, nplayers, nport, nhops, newsockets[LEN], lastplayer;
   char buf[LEN];
   struct sockaddr_in sin, incoming;
   struct hostent *ihp;
@@ -107,6 +107,7 @@ void main(int argc, char *argv[])
   nport = port;
   nplayers = atoi(argv[2]);
   nhops = atoi(argv[3]);
+  gethostname(str, sizeof str);
 
   int s = createReceiveSocket(port, (struct sockaddr_in *)&sin, nplayers);
   
@@ -182,6 +183,8 @@ void main(int argc, char *argv[])
     printf("\nRecieved Readiness: %d", ntohl(info));
   }
 
+  printf("\nSending Go Ahead!");
+  fflush(stdout);
   for(int i=0; i<nplayers; i++) // Delivering Go Ahead
   {
     info = htonl(1);
@@ -193,16 +196,89 @@ void main(int argc, char *argv[])
   }
 
 
-
-  //Create new sockets to connect to the player's waiting port
-  //to announce start and termination of the game
-
   for(int i=0; i<nplayers; i++)
   {
-    newsockets[i] = createSendingSocket(str, port + i + 1);
+    close(p[i]); //closing all sockets connected to master
   }
 
 
+  //Create new sockets to connect to the player's waiting port
+  //to announce start and termination of the game
+  //Create Socket when required and end it
+
+  /*
+  for(int i=0; i<nplayers; i++)
+  {
+    printf("\nCreating New Sending Sockets from the ports listed : hostname: %s, port: %d", str, port + i + 1);
+    newsockets[i] = createSendingSocket(str, port + i + 1);
+  }
+
+  */
+
+  //Let the Game Begin
+  i = 0;
+  newsockets[i] = createSendingSocket(str, port + i + 1);
+
+  info = htonl(1);
+  len = send(newsockets[i], &info, sizeof(uint32_t), 0);
+  if ( len != sizeof(uint32_t) ) {
+      perror("send");
+      exit(1);
+    }
+
+
+  info = htonl(nhops);
+  len = send(newsockets[i], &info, sizeof(uint32_t), 0);
+  if ( len != sizeof(uint32_t) ) {
+      perror("send");
+      exit(1);
+    }
+
+  memset(&buf[0], 0, sizeof(buf));
+  len = send(newsockets[i], buf, strlen(buf), 0);
+  if ( len != strlen(buf) ) {
+      perror("send");
+      exit(1);
+    }
+
+  close(newsockets[i]);
+
+
+  //N0w Master Waits for the Termination
+  memset(&buf[0], 0, sizeof(buf));
+  len = sizeof(sin);
+  lastplayer = accept(s, (struct sockaddr *)&incoming, &len);
+  if ( lastplayer < 0 ) {
+    perror("bind2:");
+    exit(lastplayer);
+  }
+  ihp = gethostbyaddr((char *)&incoming.sin_addr, 
+      sizeof(struct in_addr), AF_INET);
+  printf(">> Connected to %s\n", ihp->h_name);
+
+  memset(&buf[0], 0, sizeof(buf));
+  len = recv(lastplayer, buf, LEN, 0);
+  if ( len < 0 ) {
+  perror("recv");
+  exit(1);
+  }
+  printf("\n%s - Received Final Sequence\n", buf);
+
+
+  //Send Cease message to all nplayers
+  for(int i=0; i<nplayers; i++)
+  {
+    printf("\nCreating New Sending Sockets from the ports listed : hostname: %s, port: %d", str, port + i + 1);
+    newsockets[i] = createSendingSocket(str, port + i + 1);
+    info = htonl(2);
+    len = send(newsockets[i], &info, sizeof(uint32_t), 0);
+    if ( len != sizeof(uint32_t) ) {
+        perror("send");
+        exit(1);
+      }
+
+
+  }
 
 
   printf("Processing Ends");
