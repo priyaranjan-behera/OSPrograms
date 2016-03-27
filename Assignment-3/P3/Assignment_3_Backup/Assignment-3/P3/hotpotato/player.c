@@ -230,7 +230,7 @@ void main(int argc, char *argv[])
     if(hopsLeft == 1)
     {
       //todo
-      sprintf(buf, "%s,%d", buf, id);
+      sprintf(buf, "%s%d", buf, id);
       printf("\n I'm it\n");
       
       master = createSendingSocket(str, port);
@@ -273,7 +273,7 @@ void main(int argc, char *argv[])
         exit(1);
       }
 
-    sprintf(buf, "%s,%d", buf, id);
+    sprintf(buf, "%s%d,", buf, id);
       
     len = send(player, buf, strlen(buf), 0);
     if ( len != strlen(buf) ) {
