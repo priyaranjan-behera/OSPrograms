@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #define FUSE_USE_VERSION 26
 #include <fuse.h>
+#include <string.h>
 
 #define FNSize 30
 
@@ -9,7 +10,7 @@
 typedef struct block{
 	int index;
 	int nextBlock;
-	char blockContent[4096];
+	char* blockContent;
 	int status; //0 for free and 1 for occupied
 } block;
 
@@ -28,8 +29,14 @@ typedef struct directory{
 	struct file * fileinDir;
 } directory;
 
+typedef struct directoryMap{
+	int directoryIndex;
+	directory* mappedDirectory;
+} directoryMap;
+
 directory* root;
 block* blocks;
+directoryMap dm[100];
 
 int initilizeFileSystem()
 {
@@ -41,6 +48,7 @@ int initilizeFileSystem()
 	{
 		blocks[i].status = 0;
 		blocks[i].nextBlock = NULL;
+		blocks[i].blockContent = malloc(1024);
 	}
 }
 
@@ -52,12 +60,31 @@ int pb_open(const char *path, int oflags)
 }
 */
 
+int freeSubsequentBlocks(int blockIndex)
+{
+	int currBlock, nextBlock;
+	currBlock = blockIndex;
+
+	while(blocks[currBlock].status != 0)
+	{
+		nextBlock = blocks[currBlock].nextBlock;
+		free(blocks[currBlock].blockContent);
+		blocks[currBlock].blockContent = malloc(1024);
+		blocks[currBlock].status = 0;
+		currBlock = nextBlock;
+	}
+	
+}
+
 int getNextFreeBlockIndex()
 {
 	for(int i=0; i<1024; i++)
 	{
 		if(blocks[i].status == 0)
+		{
+			printf("\nNext Free Block = %d", i);
 			return i;
+		}
 	}
 }
 
@@ -230,6 +257,7 @@ int pb_open(const char *path)
 		newFile->siblingFile = currDirectory->fileinDir;
 		currDirectory->fileinDir = newFile;
 		newFile->firstBlock = getNextFreeBlockIndex();
+		blocks[newFile->firstBlock].status = 1;
 		//todo: get the next available block and allocate it to the file.
 	}
 	else
@@ -254,18 +282,31 @@ int pb_open(const char *path)
 
 int pb_write(int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
 {
-	int blocksToOffset, offsetInBlock, readBytes, remBytesInBlock;
+	int blocksToOffset, offsetInFirstBlock, wroteBytes, bytesToWriteInFirst;
+	int bytesToWriteInLast, blocksToWriteAfterFirst, offsetInBlock, offsetBlocks;
 
-	offsetInBlock = offset%1024;
+	//We will precalcute the offset blocks and the stats thereafter.
+
+	offsetBlocks = offset/1024;
+	offsetInFirstBlock = offset%1024;
+	bytesToWriteInFirst = 1024 - offsetInFirstBlock;
 	blocksToOffset = offset/1024;
-	readBytes = 0;
+	blocksToWriteAfterFirst = (count - offsetInFirstBlock)/1024;
+	if((bytesToWriteInFirst + offsetInFirstBlock) < 1024)
+		bytesToWriteInLast = 0;
+	else
+		bytesToWriteInLast = count - (bytesToWriteInFirst + (1024*(blocksToWriteAfterFirst-1)));
+
+
+	wroteBytes = 0;
 	char* tempBuf = malloc(1024);
 	printf("\nTP1");
 	block* firstBlock = &blocks[startBlock];
 	block* currBlock;
 	currBlock = firstBlock;
-	printf("\nTP1 - blocksToOffset: %d", blocksToOffset);
-	for(int i=0; i<blocksToOffset; i++)
+
+
+	for(int i=0; i<offsetBlocks; i++)
 	{
 		currBlock = &blocks[currBlock->nextBlock];
 		if(currBlock == NULL)
@@ -274,90 +315,171 @@ int pb_write(int startBlock, const void *buf, size_t count, off_t offset, struct
 		}
 	}
 
-	remBytesInBlock = (count - readBytes)%1024;
-	int init = 0;
-	printf("\nTP1 - remBytesInBlock: %d", remBytesInBlock);
-	fflush(stdout);
-	while(remBytesInBlock > 0)
+	//Now read the first block after the offset
+	printf("\nTP2 - blocksToWriteAfterFirst: %d", blocksToWriteAfterFirst);
+	printf("\nTP2 - bytesToWriteInLast: %d", bytesToWriteInLast);
+	if(blocksToWriteAfterFirst == 0 && bytesToWriteInLast == 0)
 	{
-		if(init == 1)
-		{
-			memcpy(tempBuf,currBlock->blockContent,remBytesInBlock);
-			sprintf(buf, "%s", currBlock->blockContent+offsetInBlock);
-			readBytes = offsetInBlock;
-			remBytesInBlock = (count - readBytes)%1024;
-			offsetInBlock = 0;
-			init = 0;
-		}
-		else
-		{
-			memcpy(currBlock->blockContent,&buf[offsetInBlock], 1024);
-			printf("Wrote the string: %s", currBlock->blockContent);
-			readBytes += remBytesInBlock;
-			remBytesInBlock = (count - readBytes)%1024;
-			currBlock = &blocks[currBlock->nextBlock];
-			buf = buf + 1024;
-		}
+		memcpy(&currBlock->blockContent[offsetInFirstBlock],buf, count);
+		printf("Wrote: %s,\nwrotesize:", &currBlock->blockContent[offsetInFirstBlock],strlen(&currBlock->blockContent[offsetInFirstBlock]));
+		wroteBytes = count;
 	}
-	printf("\nTP1");
-	return readBytes;
+	else
+	{
+		memcpy(&currBlock->blockContent[offsetInFirstBlock],buf, 1024-offsetInFirstBlock);
+		printf("\nTP2Wrote: %s\n wrote size: %d", &currBlock->blockContent[offsetInFirstBlock],&currBlock->blockContent[offsetInFirstBlock]);
+		wroteBytes = 1024-offsetInFirstBlock;
+		buf += wroteBytes; //temp
+		printf("\nWrote here: %d", wroteBytes);
+	//Need to free all the blocks after this block first <free, malloc, status 0>
+
+	}
+	//todo:free subsequent blocks
+	if(currBlock->nextBlock != NULL && blocks[currBlock->nextBlock].status != 0)
+		freeSubsequentBlocks(currBlock->nextBlock);
+	
+	printf("\nTP2 - readBytes: %d", wroteBytes);
+	fflush(stdout);
+	//Now all the full blocks to be written
+	for(int i = 0; i<blocksToWriteAfterFirst-1; i++)
+	{
+		printf("\nTP3 - readBytes: %d", wroteBytes);
+		fflush(stdout);
+		currBlock->nextBlock = getNextFreeBlockIndex();
+		printf("\nTP3 - readBytes: %d", wroteBytes);
+		fflush(stdout);
+		currBlock = &blocks[currBlock->nextBlock];
+		currBlock->status = 1;
+		printf("\nTP3 - readBytes: %d", wroteBytes);
+		fflush(stdout);
+		memcpy(currBlock->blockContent,buf, 1024);
+		printf("\nTP3 - readBytes: %d", wroteBytes);
+		printf("/nWrote of Size: %d", strlen(currBlock->blockContent));
+		fflush(stdout);
+		wroteBytes += 1024;
+		buf += wroteBytes;
+	}
+	printf("\nTP3 - writeBytes: %d", wroteBytes);
+	fflush(stdout);
+	//this is the last block
+	if(bytesToWriteInLast > 0)
+	{
+		currBlock->nextBlock = getNextFreeBlockIndex();
+		currBlock = &blocks[currBlock->nextBlock];
+		currBlock->status = 1;
+		memcpy(currBlock->blockContent,buf, bytesToWriteInLast); //todo
+		printf("/nWrote of Size: %d", strlen(currBlock->blockContent));
+		wroteBytes += bytesToWriteInLast;
+	}
+
+
+	printf("\nTP1 - wroteBytes:%d", wroteBytes);
+	return wroteBytes;
 }
 
 
 int pb_read(int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
 {
-	int blocksToOffset, offsetInBlock, readBytes, remBytesInBlock;
-	buf = (char*)malloc(count);
+	buf = (char*)malloc(count+10);
 
-	offsetInBlock = offset%1024;
+	int blocksToOffset, offsetInFirstBlock, readBytes, bytesToWriteInFirst;
+	int bytesToWriteInLast, blocksToWriteAfterFirst, offsetInBlock, offsetBlocks;
+	//We will precalcute the offset blocks and the stats thereafter.
+
+	offsetBlocks = offset/1024;
+	offsetInFirstBlock = offset%1024;
+	if(count < (1024 - offsetInFirstBlock))
+		bytesToWriteInFirst = count;
+	else
+		bytesToWriteInFirst = 1024 - offsetInFirstBlock;
 	blocksToOffset = offset/1024;
+	blocksToWriteAfterFirst = ((count - offsetInFirstBlock)/1024);
+	if((bytesToWriteInFirst + offsetInFirstBlock) < 1024)
+		bytesToWriteInLast = 0;
+	else
+		bytesToWriteInLast = count - (bytesToWriteInFirst + (1024*(blocksToWriteAfterFirst-1)));
+
 	readBytes = 0;
 	char* tempBuf = malloc(1024);
 	printf("\nTP1");
 	block* firstBlock = &blocks[startBlock];
 	block* currBlock;
 	currBlock = firstBlock;
-	printf("\nTP1 - blocksToOffset: %d", blocksToOffset);
-	for(int i=0; i<blocksToOffset; i++)
+
+	for(int i=0; i<offsetBlocks; i++)
 	{
 		currBlock = &blocks[currBlock->nextBlock];
-		if(currBlock == NULL)
-		{
-			return -1;
-		}
 	}
 
-	remBytesInBlock = (count - readBytes)%1024;
-	int init = 1;
-	printf("\nTP1 - remBytesInBlock: %d", remBytesInBlock);
-	fflush(stdout);
-	while(remBytesInBlock > 0)
+	//Now read the first block after the offset
+	printf("\nTP2 - blocksReadAfterFirst: %d", blocksToWriteAfterFirst);
+	printf("\nTP3 - bytesToReadInLast: %d", bytesToWriteInLast);
+	printf("\nTP3 - bytesToReadInFirst: %d", bytesToWriteInFirst);
+	printf("\nTP3 - offsetInBlock: %d", offsetInBlock);
+	if(blocksToWriteAfterFirst == 0 && bytesToWriteInLast == 0)
 	{
-		printf("\nTP1 - remBytesInBlock: %d", remBytesInBlock);
-		if(init == 1)
-		{
-			printf("Trying to read: %s", &currBlock->blockContent[offsetInBlock]);
-			sprintf(buf, "%s", &currBlock->blockContent[offsetInBlock]);
-			readBytes = count; //temp
-			remBytesInBlock = (count - readBytes)%1024;
-			offsetInBlock = 0;
-			init = 0;
-			printf("\nTP2 - readBytes: %d", readBytes);
-			printf("\nTP2 - remBytesInBlock: %d", remBytesInBlock);
-		}
-		else
-		{
-			currBlock = &blocks[currBlock->nextBlock];
-			free(tempBuf);
-			tempBuf = malloc(1024);
-			memcpy(tempBuf,currBlock->blockContent,remBytesInBlock);
-			sprintf(buf, "%s%s", buf, tempBuf);
-			readBytes += remBytesInBlock;
-			remBytesInBlock = (count - readBytes)%1024;
-		}
+		free(tempBuf);
+		char* tempBuf = malloc(1024);
+		printf("\nTrying to read: %s", &currBlock->blockContent[offsetInBlock]);
+		memcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock],count);
+		printf("Length of Temp Buf: %d\n", strlen(tempBuf));
+		strcat(buf,tempBuf);
+		readBytes = count;
+		printf("Length of String: %d\n", strlen(buf));
 	}
+	else
+	{
+		free(tempBuf);
+		char* tempBuf = malloc(1024);
+		printf("\nTrying to read: %s", &currBlock->blockContent[offsetInBlock]);
+		memcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock],1024-offsetInFirstBlock);
+		printf("Length of Temp Buf: %d\n", strlen(tempBuf));
+		strcat(buf,tempBuf);
+		readBytes = 1024-offsetInFirstBlock; //temp
+	//Need to free all the blocks after this block first <free, malloc, status 0>
+
+		printf("Length of String: %d\n", strlen(buf));
+
+	}
+	
+	
+	printf("\nTP2 - readBytes: %d", readBytes);
+
+	//Now all the full blocks to be written
+	for(int i = 0; i<blocksToWriteAfterFirst-1; i++)
+	{
+		currBlock = &blocks[currBlock->nextBlock];
+		free(tempBuf);
+		tempBuf = malloc(1024);
+		printf("Length of String: %d\n", strlen(buf));
+		memcpy(tempBuf,currBlock->blockContent,1024);
+		printf("Length of Temp Buf: %d\n", strlen(tempBuf));
+		strcat(buf,tempBuf);
+		readBytes += 1024;
+		printf("\nTP2 - readBytes: %d", readBytes);
+
+		printf("Length of String: %d\n", strlen(buf));
+	}
+
+	//this is the last block
+	if(bytesToWriteInLast > 0)
+	{
+		currBlock = &blocks[currBlock->nextBlock];
+		free(tempBuf);
+		tempBuf = malloc(1024);
+		memcpy(tempBuf,currBlock->blockContent,bytesToWriteInLast);
+		printf("Content at last block: %s", currBlock->blockContent);
+		printf("Length of Temp Buf: %d\n", strlen(tempBuf));
+		strcat(buf,tempBuf);
+		readBytes += bytesToWriteInLast;
+
+		printf("Length of String: %d\n", strlen(buf));
+	}
+	
+
 	printf("\nRead buf: %s", buf);
-	printf("\nTP1");
+	printf("\nLength of buf: %d", strlen(buf));
+	printf("\nTP1: readBytes: %d", readBytes);
 	return readBytes;
 }
 
@@ -431,20 +553,21 @@ int main(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 	initilizeFileSystem();
-	char* buf = "hello how are you!";
+	char* buf = "hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!";
 	char* parent = getParentPath("/abc");
 	char* file = getFileDirName("/abc");
-	printf("Parent - %s\n", parent);
-	printf("File - %s\n", file);
+	printf("\nParent - %s\n", parent);
+	printf("\nFile - %s\n", file);
 	int k = pb_mkdir("/abc");
 	printf("Second Call\n");
 	k = pb_mkdir("/abc/x");
 	k = pb_mkdir("/abc/x/kanhu");
 	k = pb_open("/abc/x/hello.txt");
-	k = pb_open("/abc/x/hello.txt");
 	printf("\nAt main: Write invoke for %s",buf);
-	pb_write(k, buf, 8, 1, NULL);
-	pb_read(k, buf, 8, 1, NULL);
+	printf("\nLength of input: %d", strlen(buf));
+	pb_write(k, buf, strlen(buf), 0, NULL);
+	pb_write(k, buf, strlen(buf), 0, NULL);
+	pb_read(k, buf, strlen(buf), 0, NULL);
 	printf("\nAfter the read command");
 	return k;
 }
