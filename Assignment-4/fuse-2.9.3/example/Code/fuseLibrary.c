@@ -8,14 +8,16 @@
 
 typedef struct block{
 	int index;
-	struct block * nextBlock;
+	int nextBlock;
 	char blockContent[4096];
+	int status; //0 for free and 1 for occupied
 } block;
 
 typedef struct file{
 	int fileId;
-	char filename[FNSize];
+	char fileName[FNSize];
 	int firstBlock;
+	struct file * siblingFile;
 } file;
 
 typedef struct directory{
@@ -27,13 +29,19 @@ typedef struct directory{
 } directory;
 
 directory* root;
-block* startBlock;
+block* blocks;
 
 int initilizeFileSystem()
 {
 	root = malloc(sizeof(directory));
 	strcpy(root->directoryName,"/");
-	startBlock = malloc(1024*sizeof(block));
+	blocks = malloc(1024*sizeof(block));
+	printf("\nInitializing the blocks");
+	for(int i=0; i<1024; i++)
+	{
+		blocks[i].status = 0;
+		blocks[i].nextBlock = NULL;
+	}
 }
 
 /*
@@ -43,6 +51,15 @@ int pb_open(const char *path, int oflags)
 	return fd;
 }
 */
+
+int getNextFreeBlockIndex()
+{
+	for(int i=0; i<1024; i++)
+	{
+		if(blocks[i].status == 0)
+			return i;
+	}
+}
 
 char* getFileDirName(char *path)
 {
@@ -144,55 +161,204 @@ int pb_mkdir(const char *path)
 		return -1;
 	//printf("Tp1");
 
-	char* filename = getFileDirName(path);
+	char* fileName = getFileDirName(path);
 
 	//printf("Parent - %s\n", parentPath);
-	//printf("File - %s\n", filename);
+	//printf("File - %s\n", fileName);
 
 	//printf("\nHere we are getting ready to create the new directory inside: %s", currDirectory->directoryName);
 	fflush(stdout);
 	directory* newDirectory = malloc(sizeof(directory));
-	strcpy(newDirectory->directoryName, filename);
+	strcpy(newDirectory->directoryName, fileName);
 	//printf("\nTp1");
 	fflush(stdout);
 	newDirectory->siblingDirectory = currDirectory->subdirectory;
 	currDirectory->subdirectory = newDirectory;
-	//printf("\nCreated New Directory: %s", filename);
+	//printf("\nCreated New Directory: %s", fileName);
 	return 1;
 
 }
 
+file* getFilePresentAtDir(directory* currDirectory, char* fileName)
+{
+	file* currFile = currDirectory->fileinDir;
+	printf("\nSearching for file inside the directory: %s", currDirectory->directoryName);
+	while(currFile)
+	{
+		printf("\nComparing the files: %s and %s", currFile->fileName, fileName);
+		if(strcmp(currFile->fileName, fileName)==0)
+		{
+			return currFile;
+		}
+		currFile = currFile->siblingFile;
+	}
+
+	return NULL;
+}
 
 int pb_open(const char *path)
 {
 	//printf("Tp1");
+	file* oldFile;
+	file* newFile;
 	fflush(stdout);
 	char* parentPath = getParentPath(path);
 	if(parentPath == NULL)
 		return -1;
 
-	//printf("Parent - %s\n", parentPath);
+	printf("Parent - %s\n", parentPath);
 	directory* currDirectory = traverseToDir(parentPath);
 	if(currDirectory == NULL)
 		return -1;
-	//printf("Tp1");
+	printf("Tp1");
 
-	char* filename = getFileDirName(path);
+	char* fileName = getFileDirName(path);
 
-	//printf("Parent - %s\n", parentPath);
-	//printf("File - %s\n", filename);
+	printf("Parent - %s\n", parentPath);
+	printf("File - %s\n", fileName);
 
-	//printf("\nHere we are getting ready to create the new directory inside: %s", currDirectory->directoryName);
+	printf("\nHere we are getting ready to create the new directory inside: %s", currDirectory->directoryName);
 	fflush(stdout);
+
+	oldFile = getFilePresentAtDir(currDirectory, fileName);
+	if(oldFile == NULL)
+	{
+		//new file
+		printf("\nCreating a new file here!");
+		newFile = malloc(sizeof(file));
+		strcpy(newFile->fileName, fileName);
+		newFile->siblingFile = currDirectory->fileinDir;
+		currDirectory->fileinDir = newFile;
+		newFile->firstBlock = getNextFreeBlockIndex();
+		//todo: get the next available block and allocate it to the file.
+	}
+	else
+	{
+		printf("\nReturing the old file descriptor");
+		return oldFile->firstBlock;
+		//we have the file. Lets send the index of the block
+	}
+
+
+
 	directory* newDirectory = malloc(sizeof(directory));
-	strcpy(newDirectory->directoryName, filename);
+	strcpy(newDirectory->directoryName, fileName);
 	//printf("\nTp1");
 	fflush(stdout);
 	newDirectory->siblingDirectory = currDirectory->subdirectory;
 	currDirectory->subdirectory = newDirectory;
-	//printf("\nCreated New Directory: %s", filename);
+	//printf("\nCreated New Directory: %s", fileName);
 	return 1;
 
+}
+
+int pb_write(int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
+{
+	int blocksToOffset, offsetInBlock, readBytes, remBytesInBlock;
+
+	offsetInBlock = offset%1024;
+	blocksToOffset = offset/1024;
+	readBytes = 0;
+	char* tempBuf = malloc(1024);
+	printf("\nTP1");
+	block* firstBlock = &blocks[startBlock];
+	block* currBlock;
+	currBlock = firstBlock;
+	printf("\nTP1 - blocksToOffset: %d", blocksToOffset);
+	for(int i=0; i<blocksToOffset; i++)
+	{
+		currBlock = &blocks[currBlock->nextBlock];
+		if(currBlock == NULL)
+		{
+			return -1;
+		}
+	}
+
+	remBytesInBlock = (count - readBytes)%1024;
+	int init = 0;
+	printf("\nTP1 - remBytesInBlock: %d", remBytesInBlock);
+	fflush(stdout);
+	while(remBytesInBlock > 0)
+	{
+		if(init == 1)
+		{
+			memcpy(tempBuf,currBlock->blockContent,remBytesInBlock);
+			sprintf(buf, "%s", currBlock->blockContent+offsetInBlock);
+			readBytes = offsetInBlock;
+			remBytesInBlock = (count - readBytes)%1024;
+			offsetInBlock = 0;
+			init = 0;
+		}
+		else
+		{
+			memcpy(currBlock->blockContent,&buf[offsetInBlock], 1024);
+			printf("Wrote the string: %s", currBlock->blockContent);
+			readBytes += remBytesInBlock;
+			remBytesInBlock = (count - readBytes)%1024;
+			currBlock = &blocks[currBlock->nextBlock];
+			buf = buf + 1024;
+		}
+	}
+	printf("\nTP1");
+	return readBytes;
+}
+
+
+int pb_read(int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
+{
+	int blocksToOffset, offsetInBlock, readBytes, remBytesInBlock;
+	buf = (char*)malloc(count);
+
+	offsetInBlock = offset%1024;
+	blocksToOffset = offset/1024;
+	readBytes = 0;
+	char* tempBuf = malloc(1024);
+	printf("\nTP1");
+	block* firstBlock = &blocks[startBlock];
+	block* currBlock;
+	currBlock = firstBlock;
+	printf("\nTP1 - blocksToOffset: %d", blocksToOffset);
+	for(int i=0; i<blocksToOffset; i++)
+	{
+		currBlock = &blocks[currBlock->nextBlock];
+		if(currBlock == NULL)
+		{
+			return -1;
+		}
+	}
+
+	remBytesInBlock = (count - readBytes)%1024;
+	int init = 1;
+	printf("\nTP1 - remBytesInBlock: %d", remBytesInBlock);
+	fflush(stdout);
+	while(remBytesInBlock > 0)
+	{
+		printf("\nTP1 - remBytesInBlock: %d", remBytesInBlock);
+		if(init == 1)
+		{
+			printf("Trying to read: %s", &currBlock->blockContent[offsetInBlock]);
+			sprintf(buf, "%s", &currBlock->blockContent[offsetInBlock]);
+			readBytes = count; //temp
+			remBytesInBlock = (count - readBytes)%1024;
+			offsetInBlock = 0;
+			init = 0;
+			printf("\nTP2 - readBytes: %d", readBytes);
+			printf("\nTP2 - remBytesInBlock: %d", remBytesInBlock);
+		}
+		else
+		{
+			currBlock = &blocks[currBlock->nextBlock];
+			free(tempBuf);
+			tempBuf = malloc(1024);
+			memcpy(tempBuf,currBlock->blockContent,remBytesInBlock);
+			sprintf(buf, "%s%s", buf, tempBuf);
+			readBytes += remBytesInBlock;
+			remBytesInBlock = (count - readBytes)%1024;
+		}
+	}
+	printf("\nRead buf: %s", buf);
+	printf("\nTP1");
+	return readBytes;
 }
 
 /*
@@ -213,7 +379,7 @@ int findFileId(const char *path)
     		currFile = currDirectory->fileinDir;
     		while(currFile)
     		{
-    			if(strcmp(currFile.filename, token)
+    			if(strcmp(currFile.fileName, token)
     			{
     				return currFile.firstBlock;
     			}
@@ -265,6 +431,7 @@ int main(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 	initilizeFileSystem();
+	char* buf = "hello how are you!";
 	char* parent = getParentPath("/abc");
 	char* file = getFileDirName("/abc");
 	printf("Parent - %s\n", parent);
@@ -273,6 +440,12 @@ int main(int argc, char *argv[])
 	printf("Second Call\n");
 	k = pb_mkdir("/abc/x");
 	k = pb_mkdir("/abc/x/kanhu");
+	k = pb_open("/abc/x/hello.txt");
+	k = pb_open("/abc/x/hello.txt");
+	printf("\nAt main: Write invoke for %s",buf);
+	pb_write(k, buf, 8, 1, NULL);
+	pb_read(k, buf, 8, 1, NULL);
+	printf("\nAfter the read command");
 	return k;
 }
 
