@@ -4,7 +4,6 @@
 #include <fuse.h>
 #include <string.h>
 #include <errno.h>
-#include <syslog.h>
 
 #define FNSize 30
 
@@ -42,11 +41,10 @@ directoryMap dm[100];
 
 int initilizeFileSystem()
 {
-	syslog(LOG_INFO, "Initializing the variables");
 	root = malloc(sizeof(directory));
 	strcpy(root->directoryName,"/");
 	blocks = malloc(1024*sizeof(block));
-	syslog(LOG_INFO,"\nInitializing the blocks");
+	printf("\nInitializing the blocks");
 	for(int i=0; i<1024; i++)
 	{
 		blocks[i].status = 0;
@@ -610,25 +608,26 @@ int initializeBlocks(block* startBlock, int fileSystemSize)
 }
 */
 
-
 static struct fuse_operations pb_oper = {
 	.mkdir		= pb_mkdir,
+	.open 		= pb_open,
+	.read 		= pb_read,
+	.write 		= pb_write,
+	.getattr 	= pb_getattr
 };
+
+
+int main(int argc, char *argv[])
+{
+	umask(0);
+	initilizeFileSystem();
+	return fuse_main(argc, argv, &pb_oper, NULL);
+}
+
 
 /*
 int main(int argc, char *argv[])
 {
-	umask(0);
-	return fuse_main(argc, argv, &pb_oper, NULL);
-}
-*/
-
-
-int main(int argc, char *argv[])
-{
-	openlog("slog", LOG_PID|LOG_CONS, LOG_USER);
- 	syslog(LOG_INFO, "A different kind of Hello world ... ");
-
 	initilizeFileSystem();
 	char* buf = "hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!";
 	char* parent = getParentPath("/abc");
@@ -646,9 +645,9 @@ int main(int argc, char *argv[])
 	pb_write(k, buf, strlen(buf), 0, NULL);
 	pb_read(k, buf, strlen(buf), 0, NULL);
 	printf("\nAfter the read command");
-	closelog();
 	return k;
 }
+*/
 
 
 
