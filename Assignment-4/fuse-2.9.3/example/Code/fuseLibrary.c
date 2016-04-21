@@ -7,6 +7,7 @@
 #include <syslog.h>
 
 #define FNSize 30
+//gcc -w -g -Wall fuseLibraryTry.c `pkg-config fuse --cflags --libs` -o fuseLibraryTry
 
 
 typedef struct block{
@@ -85,7 +86,7 @@ int getNextFreeBlockIndex()
 	{
 		if(blocks[i].status == 0)
 		{
-			printf("\nNext Free Block = %d", i);
+			syslog(LOG_INFO, "\nNext Free Block = %d", i);
 			return i;
 		}
 	}
@@ -143,7 +144,7 @@ directory* traverseToDir(char* path)
 	directory *newDirectory;
 	currDirectory = root;
 	while(token) {
-		printf("\nProcessing Token: %s", token);
+		syslog(LOG_INFO, "\nProcessing Token: %s", token);
 		currDirectory = currDirectory->subdirectory;
 		flag = 0;
 		if(strcmp(currDirectory->directoryName, token) == 0)
@@ -177,7 +178,7 @@ directory* traverseToDir(char* path)
 }
 
 
-int pb_mkdir(const char *path)
+int pb_mkdir(const char *path, mode_t mode)
 {
 	//printf("Tp1");
 	fflush(stdout);
@@ -212,10 +213,10 @@ int pb_mkdir(const char *path)
 file* getFilePresentAtDir(directory* currDirectory, char* fileName)
 {
 	file* currFile = currDirectory->fileinDir;
-	printf("\nSearching for file inside the directory: %s", currDirectory->directoryName);
+	syslog(LOG_INFO, "\nSearching for file inside the directory: %s", currDirectory->directoryName);
 	while(currFile)
 	{
-		printf("\nComparing the files: %s and %s", currFile->fileName, fileName);
+		syslog(LOG_INFO, "\nComparing the files: %s and %s", currFile->fileName, fileName);
 		if(strcmp(currFile->fileName, fileName)==0)
 		{
 			return currFile;
@@ -243,10 +244,10 @@ int getFileSize(file* currFile)
 directory* getDirPresentAtDir(directory* currDirectory, char* dirName)
 {
 	directory* travDirectory = currDirectory->subdirectory;
-	printf("\nSearching for file inside the directory: %s", currDirectory->directoryName);
+	syslog(LOG_INFO, "\nSearching for file inside the directory: %s", currDirectory->directoryName);
 	while(travDirectory)
 	{
-		printf("\nComparing the dirs: %s and %s", travDirectory->directoryName, dirName);
+		syslog(LOG_INFO, "\nComparing the dirs: %s and %s", travDirectory->directoryName, dirName);
 		if(strcmp(travDirectory->directoryName, dirName)==0)
 		{
 			return travDirectory;
@@ -257,7 +258,7 @@ directory* getDirPresentAtDir(directory* currDirectory, char* dirName)
 	return NULL;
 }
 
-int pb_open(const char *path)
+int pb_open(const char *path,struct fuse_file_info* fi)
 {
 	//printf("Tp1");
 	file* oldFile;
@@ -278,14 +279,14 @@ int pb_open(const char *path)
 	printf("Parent - %s\n", parentPath);
 	printf("File - %s\n", fileName);
 
-	printf("\nHere we are getting ready to create the new directory inside: %s", currDirectory->directoryName);
+	syslog(LOG_INFO, "\nHere we are getting ready to create the new directory inside: %s", currDirectory->directoryName);
 	fflush(stdout);
 
 	oldFile = getFilePresentAtDir(currDirectory, fileName);
 	if(oldFile == NULL)
 	{
 		//new file
-		printf("\nCreating a new file here!");
+		syslog(LOG_INFO, "\nCreating a new file here!");
 		newFile = malloc(sizeof(file));
 		strcpy(newFile->fileName, fileName);
 		newFile->siblingFile = currDirectory->fileinDir;
@@ -297,7 +298,7 @@ int pb_open(const char *path)
 	}
 	else
 	{
-		printf("\nReturing the old file descriptor");
+		syslog(LOG_INFO, "\nReturing the old file descriptor");
 		return oldFile->firstBlock;
 		//we have the file. Lets send the index of the block
 	}
@@ -306,6 +307,11 @@ int pb_open(const char *path)
 
 	return -ENOENT;
 
+}
+
+static int pb_opendir(const char *path, struct fuse_file_info *fi)
+{
+	return 0;
 }
 
 int pb_getattr(const char* path, struct stat* stbuf)
@@ -354,7 +360,7 @@ int pb_getattr(const char* path, struct stat* stbuf)
 
 }
 
-int pb_write(int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
+int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
 {
 	int blocksToOffset, offsetInFirstBlock, wroteBytes, bytesToWriteInFirst;
 	int bytesToWriteInLast, blocksToWriteAfterFirst, offsetInBlock, offsetBlocks;
@@ -451,8 +457,17 @@ int pb_write(int startBlock, const void *buf, size_t count, off_t offset, struct
 	return wroteBytes;
 }
 
+int pb_write(const char* path, char *buf, size_t size, off_t offset, struct fuse_file_info* fi)
+{
+	int fd = pb_open(path,fi);
+	if(fd<0)
+		return -ENOENT;
+	return pb_writefile(fd,buf,size,offset,fi);
+}
 
-int pb_read(int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
+
+
+int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
 {
 	buf = (char*)malloc(count+10);
 
@@ -557,6 +572,15 @@ int pb_read(int startBlock, const void *buf, size_t count, off_t offset, struct 
 	return readBytes;
 }
 
+int pb_read(const char* path, char *buf, size_t size, off_t offset, struct fuse_file_info* fi)
+{
+	int fd = pb_open(path,fi);
+	if(fd<0)
+		return -ENOENT;
+	return pb_readfile(fd, buf, size, offset, fi);
+}
+
+
 /*
 int findFileId(const char *path)
 {
@@ -628,7 +652,8 @@ int main(int argc, char *argv[])
 {
 	openlog("slog", LOG_PID|LOG_CONS, LOG_USER);
  	syslog(LOG_INFO, "A different kind of Hello world ... ");
-
+ 	struct stat* stbuf = malloc(sizeof(struct stat));
+ 	printf("Root Folder: %s", argv[1]);
 	initilizeFileSystem();
 	char* buf = "hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!hello how are you!";
 	char* parent = getParentPath("/abc");
@@ -646,6 +671,13 @@ int main(int argc, char *argv[])
 	pb_write(k, buf, strlen(buf), 0, NULL);
 	pb_read(k, buf, strlen(buf), 0, NULL);
 	printf("\nAfter the read command");
+	pb_getattr("/abc/x/hello.txt", stbuf);
+	printf("\nAttributes of the file:");
+	printf("st_dev: %d", stbuf->st_dev);
+	printf("st_mode: %d", stbuf->st_mode);
+	printf("st_nlink: %d", stbuf->st_nlink);
+	printf("st_size: %d", stbuf->st_size);
+	printf("\n");
 	closelog();
 	return k;
 }
