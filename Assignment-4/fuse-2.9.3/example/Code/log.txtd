@@ -1,0 +1,883 @@
+
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /.Trash
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.Trash-1000
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash-1000
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside Getattr
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.test.swp
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swp
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.test.swp
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swp
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside MakeNode
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swp
+Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returned File as NULL
+Creating a new file here!
+
+
+Next Free Block = 0
+Inside GetattrTriggering getattr for /.test.swp
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swp
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swp and .test.swpFound File
+File Size: 2
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swp
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swp and .test.swpReturned File as NULL
+Inside GetattrTriggering getattr for /.test.swpx
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swpx
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swp and .test.swpx
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.test.swpx
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swpx
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swp and .test.swpx
+Going to return NULL
+Returning Error
+Inside MakeNode
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swpx
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swp and .test.swpx
+Going to return NULL
+Returned File as NULL
+Creating a new file here!
+
+
+Next Free Block = 1
+Inside GetattrTriggering getattr for /.test.swpx
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swpx
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swpxFound File
+File Size: 2
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swpx
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swpxReturned File as NULL
+Inside GetattrTriggering getattr for /.test.swx
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swx
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swxInside the Loop
+
+Comparing the files: .test.swp and .test.swx
+Going to return NULL
+Returning Error
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swp
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swpInside the Loop
+
+Comparing the files: .test.swp and .test.swpReturned File as NULLInside Read
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swp
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swpInside the Loop
+
+Comparing the files: .test.swp and .test.swpReturned File as NULLInside pb_open
+TP1
+Offset: 0
+TP2 - blocksReadAfterFirst: 3
+TP3 - bytesToReadInLast: 0
+TP3 - bytesToReadInFirst: 1024
+TP3 - offsetInBlock: 0
+ TP3 - Inside Read: Starting Block: 0
+Trying to read: Length of Temp Buf: 2
+Length of String: 3
+
+TP2 - readBytes: 1024Length of String: 3
+Length of Temp Buf: 2
+
+TP2 - readBytes: 2048Length of String: 5
+Length of String: 5
+Length of Temp Buf: 2
+
+TP2 - readBytes: 3072Length of String: 7
+Length of String: 7
+Length of Temp Buf: 2
+
+TP2 - readBytes: 4096Length of String: 9
+
+Read buf: x
+Length of buf: 9
+TP1: readBytes: 4096
+Inside GetattrTriggering getattr for /.test.swp
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swp
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swpInside the Loop
+
+Comparing the files: .test.swp and .test.swpFound File
+File Size: 2
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swp
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swpInside the Loop
+
+Comparing the files: .test.swp and .test.swpReturned File as NULLInside Read
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swp
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swpInside the Loop
+
+Comparing the files: .test.swp and .test.swpReturned File as NULLInside pb_open
+TP1
+Offset: 0
+TP2 - blocksReadAfterFirst: 3
+TP3 - bytesToReadInLast: 0
+TP3 - bytesToReadInFirst: 1024
+TP3 - offsetInBlock: 0
+ TP3 - Inside Read: Starting Block: 0
+Trying to read: Length of Temp Buf: 2
+Length of String: 2
+
+TP2 - readBytes: 1024Length of String: 2
+Length of Temp Buf: 2
+
+TP2 - readBytes: 2048Length of String: 4
+Length of String: 4
+Length of Temp Buf: 2
+
+TP2 - readBytes: 3072Length of String: 6
+Length of String: 6
+Length of Temp Buf: 2
+
+TP2 - readBytes: 4096Length of String: 8
+
+Read buf: 
+Length of buf: 8
+TP1: readBytes: 4096
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and testInside the Loop
+
+Comparing the files: .test.swp and test
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.test.swo
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swoInside the Loop
+
+Comparing the files: .test.swp and .test.swo
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.test.swo
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swoInside the Loop
+
+Comparing the files: .test.swp and .test.swo
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.test.swo
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swoInside the Loop
+
+Comparing the files: .test.swp and .test.swo
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.test.swo
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swoInside the Loop
+
+Comparing the files: .test.swp and .test.swo
+Going to return NULL
+Returning Error
+Inside MakeNode
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swpx and .test.swoInside the Loop
+
+Comparing the files: .test.swp and .test.swo
+Going to return NULL
+Returned File as NULL
+Creating a new file here!
+
+
+Next Free Block = 2
+Inside GetattrTriggering getattr for /.test.swo
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swo and .test.swoFound File
+File Size: 2
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swo and .test.swoReturned File as NULL
+Inside Write
+
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swo and .test.swoReturned File as NULLInside pb_write
+TP1
+TP2 - blocksToWriteAfterFirst: 3
+TP2 - bytesToWriteInLast: 0
+ Offset: 0
+ Count: 4096
+Inside - Write: Starting Block: 0
+TP2Wrote: b0VIM 7.4
+ wrote size: 9
+Wrote here: 1024
+TP2 - readBytes: 1024
+TP3 - readBytes: 1024
+
+
+Next Free Block = 3
+TP3 - readBytes: 1024
+TP3 - readBytes: 1024
+TP3 - readBytes: 1024
+Wrote of Size: 0
+TP3 - readBytes: 2048
+
+
+Next Free Block = 4
+TP3 - readBytes: 2048
+TP3 - readBytes: 2048
+TP3 - readBytes: 2048
+Wrote of Size: 0
+TP3 - readBytes: 3072
+
+
+Next Free Block = 5
+TP3 - readBytes: 3072
+TP3 - readBytes: 3072
+TP3 - readBytes: 3072
+Wrote of Size: 0
+TP3 - writeBytes: 4096
+TP1 - wroteBytes:4096
+Should have written: 4096
+Inside GetattrTriggering getattr for /.test.swo
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swo and .test.swoFound File
+File Size: 2
+Inside Write
+
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swo and .test.swoReturned File as NULLInside pb_write
+TP1
+TP2 - blocksToWriteAfterFirst: 3
+TP2 - bytesToWriteInLast: 0
+ Offset: 0
+ Count: 4096
+Inside - Write: Starting Block: 0
+TP2Wrote: b0VIM 7.4
+ wrote size: 9
+Wrote here: 1024
+TP2 - readBytes: 1024
+TP3 - readBytes: 1024
+
+
+Next Free Block = 0
+TP3 - readBytes: 1024
+TP3 - readBytes: 1024
+TP3 - readBytes: 1024
+Wrote of Size: 0
+TP3 - readBytes: 2048
+
+
+Next Free Block = 3
+TP3 - readBytes: 2048
+TP3 - readBytes: 2048
+TP3 - readBytes: 2048
+Wrote of Size: 0
+TP3 - readBytes: 3072
+
+
+Next Free Block = 4
+TP3 - readBytes: 3072
+TP3 - readBytes: 3072
+TP3 - readBytes: 3072
+Wrote of Size: 0
+TP3 - writeBytes: 4096
+TP1 - wroteBytes:4096
+Should have written: 4096
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swo and testInside the Loop
+
+Comparing the files: .test.swpx and testInside the Loop
+
+Comparing the files: .test.swp and test
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swo and testInside the Loop
+
+Comparing the files: .test.swpx and testInside the Loop
+
+Comparing the files: .test.swp and test
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swo and testInside the Loop
+
+Comparing the files: .test.swpx and testInside the Loop
+
+Comparing the files: .test.swp and test
+Going to return NULL
+Returning Error
+Inside MakeNode
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: .test.swo and testInside the Loop
+
+Comparing the files: .test.swpx and testInside the Loop
+
+Comparing the files: .test.swp and test
+Going to return NULL
+Returned File as NULL
+Creating a new file here!
+
+
+Next Free Block = 5
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test and testFound File
+File Size: 0
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test and testReturned File as NULL
+Inside Write
+
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test and testReturned File as NULLInside pb_write
+TP1
+TP2 - blocksToWriteAfterFirst: 0
+TP2 - bytesToWriteInLast: 0
+ Offset: 0
+ Count: 18
+Inside - Write: Starting Block: 0Wrote: hello how are you
+,
+wrotesize:
+TP2 - readBytes: 18
+TP3 - writeBytes: 18
+TP1 - wroteBytes:18
+Should have written: 18
+Inside GetattrTriggering getattr for /test
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test and testFound File
+File Size: 1
+Inside Write
+
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test and .test.swoInside the Loop
+
+Comparing the files: .test.swo and .test.swoReturned File as NULLInside pb_write
+TP1
+TP2 - blocksToWriteAfterFirst: 3
+TP2 - bytesToWriteInLast: 0
+ Offset: 0
+ Count: 4096
+Inside - Write: Starting Block: 0
+TP2Wrote: b0VIM 7.4
+ wrote size: 9
+Wrote here: 1024
+TP2 - readBytes: 1024
+TP3 - readBytes: 1024
+
+
+Next Free Block = 0
+TP3 - readBytes: 1024
+TP3 - readBytes: 1024
+TP3 - readBytes: 1024
+Wrote of Size: 0
+TP3 - readBytes: 2048
+
+
+Next Free Block = 3
+TP3 - readBytes: 2048
+TP3 - readBytes: 2048
+TP3 - readBytes: 2048
+Wrote of Size: 0
+TP3 - readBytes: 3072
+
+
+Next Free Block = 4
+TP3 - readBytes: 3072
+TP3 - readBytes: 3072
+TP3 - readBytes: 3072
+Wrote of Size: 0
+TP3 - writeBytes: 4096
+TP1 - wroteBytes:4096
+Should have written: 4096
+Inside GetattrTriggering getattr for /.test.swo
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .test.swo
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test and .test.swoInside the Loop
+
+Comparing the files: .test.swo and .test.swoFound File
+File Size: 2

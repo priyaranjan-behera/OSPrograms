@@ -7,6 +7,7 @@
 #include <syslog.h>
 
 #define FNSize 30
+//gcc -w -g -Wall fuseLibraryTry.c `pkg-config fuse --cflags --libs` -o fuseLibraryTry
 
 
 typedef struct block{
@@ -40,11 +41,14 @@ directory* root;
 block* blocks;
 directoryMap dm[100];
 
-int initilizeFileSystem()
+int initializeFileSystem()
 {
 	syslog(LOG_INFO, "Initializing the variables");
 	root = malloc(sizeof(directory));
 	strcpy(root->directoryName,"/");
+	root->fileinDir = NULL;
+	root->subdirectory = NULL;
+	root->siblingDirectory = NULL;
 	blocks = malloc(1024*sizeof(block));
 	syslog(LOG_INFO,"\nInitializing the blocks");
 	for(int i=0; i<1024; i++)
@@ -136,12 +140,16 @@ char* getParentPath(char* path)
 
 directory* traverseToDir(char* path)
 {
-	char *token = strtok(path, "/");
+	printf("Inside traverseToDir");
+	fflush(stdout);
 	int flag;
 	directory *currDirectory;
 	directory* sibDirectory;
 	directory *newDirectory;
 	currDirectory = root;
+	if(strcmp(path,"/")==0)
+		return currDirectory;
+	char *token = strtok(path, "/");
 	while(token) {
 		syslog(LOG_INFO, "\nProcessing Token: %s", token);
 		currDirectory = currDirectory->subdirectory;
@@ -211,11 +219,16 @@ int pb_mkdir(const char *path, mode_t mode)
 
 file* getFilePresentAtDir(directory* currDirectory, char* fileName)
 {
+	printf("Inside getFilePresentAtDir");
+	fflush(stdout);
 	file* currFile = currDirectory->fileinDir;
-	syslog(LOG_INFO, "\nSearching for file inside the directory: %s", currDirectory->directoryName);
-	while(currFile)
+	printf("\nSearching for file inside the directory: %s", currDirectory->directoryName);
+	fflush(stdout);
+	while(currFile != NULL)
 	{
-		syslog(LOG_INFO, "\nComparing the files: %s and %s", currFile->fileName, fileName);
+		printf("Inside the Loop\n");
+		fflush(stdout);
+		printf("\nComparing the files: %s and %s", currFile->fileName, fileName);
 		if(strcmp(currFile->fileName, fileName)==0)
 		{
 			return currFile;
@@ -223,6 +236,8 @@ file* getFilePresentAtDir(directory* currDirectory, char* fileName)
 		currFile = currFile->siblingFile;
 	}
 
+	printf("\nGoing to return NULL\n");
+	fflush(stdout);
 	return NULL;
 }
 
@@ -278,14 +293,15 @@ int pb_open(const char *path,struct fuse_file_info* fi)
 	printf("Parent - %s\n", parentPath);
 	printf("File - %s\n", fileName);
 
-	syslog(LOG_INFO, "\nHere we are getting ready to create the new directory inside: %s", currDirectory->directoryName);
+	printf("\nHere we are getting ready to create the new directory inside: %s", currDirectory->directoryName);
 	fflush(stdout);
 
 	oldFile = getFilePresentAtDir(currDirectory, fileName);
 	if(oldFile == NULL)
 	{
 		//new file
-		syslog(LOG_INFO, "\nCreating a new file here!");
+		printf("\nCreating a new file here!");
+		fflush(stdout);
 		newFile = malloc(sizeof(file));
 		strcpy(newFile->fileName, fileName);
 		newFile->siblingFile = currDirectory->fileinDir;
@@ -632,6 +648,11 @@ int initializeBlocks(block* startBlock, int fileSystemSize)
 
 }
 */
+
+void* pb_init(struct fuse_conn_info *conn)
+{
+	initializeFileSystem();
+}
 static struct fuse_operations pb_oper = {
 	.mkdir		= pb_mkdir,
 	.open 		= pb_open,
@@ -639,13 +660,21 @@ static struct fuse_operations pb_oper = {
 	.write 		= pb_write,
 	.getattr 	= pb_getattr,
 	.opendir 	= pb_opendir,
+	.init 		= pb_init,
 };
+
+/*
+int main(int argc, char *argv[])
+{
+	umask(0);
+	return fuse_main(argc, argv, &pb_oper, NULL);
+}
+*/
 
 
 int main(int argc, char *argv[])
 {
 	umask(0);
-	initilizeFileSystem();
 	return fuse_main(argc, argv, &pb_oper, NULL);
 }
 

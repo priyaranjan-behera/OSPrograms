@@ -1,0 +1,250 @@
+
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /.Trash
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.Trash-1000
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash-1000
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside Getattr
+
+Inside Access 
+
+Inside Readdir
+Inside Getattr
+Inside GetattrTriggering getattr for /test.txt
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /test.txt
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /test.txt
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /test.txt
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside MakeNode
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returned File as NULL
+Creating a new file here!
+
+
+Next Free Block = 0
+Inside GetattrTriggering getattr for /test.txt
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.txt and test.txtFound File
+File Size: 2
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.txt and test.txtReturned File as NULL
+Inside Write
+
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.txt and test.txtReturned File as NULLInside pb_write
+TP1
+TP2 - blocksToWriteAfterFirst: 0
+TP2 - bytesToWriteInLast: 0
+ Offset: 0
+ Count: 9
+Inside - Write: Starting Block: 0Wrote: hahahaha
+,
+wrotesize:
+TP2 - readBytes: 9
+TP3 - writeBytes: 9
+TP1 - wroteBytes:9
+Should have written: 9
+Inside Getattr
+Inside GetattrTriggering getattr for /test.txt
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.txt and test.txtFound File
+File Size: 10
+
+Inside Access 
+
+
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.txt and test.txtReturned File as NULLInside Read
+Inside OpenParent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.txt and test.txtReturned File as NULLInside pb_open
+TP1
+Offset: 0
+TP2 - blocksReadAfterFirst: 3
+TP3 - bytesToReadInLast: 0
+TP3 - bytesToReadInFirst: 1024
+TP3 - offsetInBlock: 0
+ TP3 - Inside Read: Starting Block: 0
+Trying to read: hahahaha
+Length of Temp Buf: 10
+Length of String: 11
+
+TP2 - readBytes: 1024Length of String: 11
+Length of Temp Buf: 10
+
+TP2 - readBytes: 2048Length of String: 21
+Length of String: 21
+Length of Temp Buf: 10
+
+TP2 - readBytes: 3072Length of String: 31
+Length of String: 31
+Length of Temp Buf: 10
+
+TP2 - readBytes: 4096Length of String: 41
+
+Read buf: xhahahaha
+hahahaha
+hahahaha
+hahahaha
+
+Length of buf: 41
+TP1: readBytes: 4096
+Inside GetattrTriggering getattr for /test.txt
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.txt and test.txtFound File
+File Size: 10
+Inside GetattrTriggering getattr for /test.txt
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.txt
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.txt and test.txtFound File
+File Size: 10
