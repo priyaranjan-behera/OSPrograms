@@ -55,7 +55,7 @@ int initializeFileSystem()
 	for(int i=0; i<NUMBlocks; i++)
 	{
 		blocks[i].status = 0;
-		blocks[i].nextBlock = NULL;
+		blocks[i].nextBlock = -1;
 		blocks[i].blockContent = malloc(4096);
 	}
 }
@@ -92,6 +92,7 @@ int freeSubsequentBlocks(int blockIndex)
 		free(blocks[currBlock].blockContent);
 		blocks[currBlock].blockContent = malloc(4096);
 		blocks[currBlock].status = 0;
+		blocks[currBlock].nextBlock = -1;
 		currBlock = nextBlock;
 	}
 	
@@ -300,7 +301,7 @@ int getFileSize(file* currFile)
 	while(currBlock)
 	{
 		size += strlen(currBlock->blockContent);
-		if(currBlock->nextBlock == NULL || blocks[currBlock->nextBlock].status == 0)
+		if(currBlock->nextBlock == NULL || currBlock->nextBlock == -1 || blocks[currBlock->nextBlock].status == 0)
 			return size;
 		currBlock = &blocks[currBlock->nextBlock];
 	}		
@@ -365,6 +366,7 @@ int pb_openfd(const char *path,struct fuse_file_info* fi)
 		currDirectory->fileinDir = newFile;
 		newFile->firstBlock = getNextFreeBlockIndex();
 		printf("Creating new file and allocating block: %d", newFile->firstBlock);
+		fflush(stdout);
 		blocks[newFile->firstBlock].status = 1;
 		return newFile->firstBlock;
 		
@@ -559,7 +561,8 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 	for(int i=0; i<offsetBlocks; i++)
 	{
 		currBlock = &blocks[currBlock->nextBlock];
-		if(currBlock->nextBlock == NULL)
+		printf("Next Block listed here is: %d", currBlock->nextBlock);
+		if(currBlock->nextBlock == NULL || currBlock->nextBlock < 0)
 		{
 			printf("\n Need to allocate new block");
 			currBlock->nextBlock = getNextFreeBlockIndex();	
@@ -597,7 +600,7 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 
 	}
 	//todo:free subsequent blocks
-	if(currBlock->nextBlock != NULL || blocks[currBlock->nextBlock].status != 0)
+	if((currBlock->nextBlock != NULL && currBlock->nextBlock != -1) || blocks[currBlock->nextBlock].status != 0)
 		freeSubsequentBlocks(currBlock->nextBlock);
 	
 	printf("\nTP2 - readBytes: %d", wroteBytes);
