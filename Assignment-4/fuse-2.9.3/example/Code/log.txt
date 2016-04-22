@@ -33,54 +33,58 @@ Inside Getattr
 
 Inside Access 
 
+
+
+Inside Access 
+
+
+
+Inside Access 
+
 Inside Readdir
 Inside Getattr
-Inside GetattrTriggering getattr for /test.txt
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /.Trash
 Parent Path: /Parent - /
 
 Inside traverseToDir, traversing to: / : length: 1
 Comparing to / of length: 1the output of strcmp is: 0
 Returning rootTp1Parent - /
-File - test.txt
+File - .Trash
 
 Will Invoke getDirPresentAtDir
 Searching for directory inside the directory: /Inside getFilePresentAtDir
 Searching for file inside the directory: /
 Going to return NULL
 Returning Error
-Inside GetattrTriggering getattr for /test.txt
+Inside GetattrTriggering getattr for /.Trash-1000
 Parent Path: /Parent - /
 
 Inside traverseToDir, traversing to: / : length: 1
 Comparing to / of length: 1the output of strcmp is: 0
 Returning rootTp1Parent - /
-File - test.txt
+File - .Trash-1000
 
 Will Invoke getDirPresentAtDir
 Searching for directory inside the directory: /Inside getFilePresentAtDir
 Searching for file inside the directory: /
 Going to return NULL
 Returning Error
-Inside GetattrTriggering getattr for /test.txt
+
+Inside Access 
+
+Inside Readdir
+Inside Getattr
+Inside GetattrTriggering getattr for /test.py
 Parent Path: /Parent - /
 
 Inside traverseToDir, traversing to: / : length: 1
 Comparing to / of length: 1the output of strcmp is: 0
 Returning rootTp1Parent - /
-File - test.txt
-
-Will Invoke getDirPresentAtDir
-Searching for directory inside the directory: /Inside getFilePresentAtDir
-Searching for file inside the directory: /
-Going to return NULL
-Returning Error
-Inside GetattrTriggering getattr for /test.txt
-Parent Path: /Parent - /
-
-Inside traverseToDir, traversing to: / : length: 1
-Comparing to / of length: 1the output of strcmp is: 0
-Returning rootTp1Parent - /
-File - test.txt
+File - test.py
 
 Will Invoke getDirPresentAtDir
 Searching for directory inside the directory: /Inside getFilePresentAtDir
@@ -93,7 +97,7 @@ Inside OpenParent - /
 Inside traverseToDir, traversing to: / : length: 1
 Comparing to / of length: 1the output of strcmp is: 0
 Returning rootTp1Parent - /
-File - test.txt
+File - test.py
 Inside getFilePresentAtDir
 Searching for file inside the directory: /
 Going to return NULL
@@ -102,30 +106,30 @@ Creating a new file here!
 
 
 Next Free Block = 0
-Inside GetattrTriggering getattr for /test.txt
+Inside GetattrTriggering getattr for /test.py
 Parent Path: /Parent - /
 
 Inside traverseToDir, traversing to: / : length: 1
 Comparing to / of length: 1the output of strcmp is: 0
 Returning rootTp1Parent - /
-File - test.txt
+File - test.py
 
 Will Invoke getDirPresentAtDir
 Searching for directory inside the directory: /Inside getFilePresentAtDir
 Searching for file inside the directory: /Inside the Loop
 
-Comparing the files: test.txt and test.txtFound File
+Comparing the files: test.py and test.pyFound File
 File Size: 2
 Inside OpenParent - /
 
 Inside traverseToDir, traversing to: / : length: 1
 Comparing to / of length: 1the output of strcmp is: 0
 Returning rootTp1Parent - /
-File - test.txt
+File - test.py
 Inside getFilePresentAtDir
 Searching for file inside the directory: /Inside the Loop
 
-Comparing the files: test.txt and test.txtReturned File as NULL
+Comparing the files: test.py and test.pyReturned File as NULL
 Inside Write
 
 Inside OpenParent - /
@@ -133,118 +137,763 @@ Inside OpenParent - /
 Inside traverseToDir, traversing to: / : length: 1
 Comparing to / of length: 1the output of strcmp is: 0
 Returning rootTp1Parent - /
-File - test.txt
+File - test.py
 Inside getFilePresentAtDir
 Searching for file inside the directory: /Inside the Loop
 
-Comparing the files: test.txt and test.txtReturned File as NULLInside pb_write
+Comparing the files: test.py and test.pyReturned File as NULLInside pb_write
 TP1
 TP2 - blocksToWriteAfterFirst: 0
 TP2 - bytesToWriteInLast: 0
  Offset: 0
- Count: 9
-Inside - Write: Starting Block: 0Wrote: hahahaha
-,
+ Count: 2966
+Inside - Write: Starting Block: 0Wrote: import tensorflow as tf
+from sklearn.datasets import load_boston
+import tensorflow as tf
+import numpy as np
+from sklearn.preprocessing import normalize
+import random as random
+
+import cPickle
+
+wordEmbeddings = cPickle.load(open( "../data/word2vecEmbeddings.pkl", "rb"))
+word2vecDict = cPickle.load(open( "../data/word2vecDict.pkl", "rb"))
+#word2vecRevDict = cPickle.load(open( "../data/word2vecRevDict.pkl", "rb"))
+
+
+entityEmbeddings = cPickle.load(open( "../data/entityEmbeddings.pkl", "rb"))
+relationEmbeddings = cPickle.load(open( "../data/relationEmbeddings.pkl", "rb"))
+entityLookup = cPickle.load(open( "../data/WN_synset2idx.pkl", "rb"))
+entityRevLoopup = cPickle.load(open( "../data/WN_idx2synset.pkl", "rb"))
+
+inpl = cPickle.load(open('../data/WN-train-lhs.pkl', 'rW'))
+inpr = cPickle.load(open('../data/WN-train-rhs.pkl', 'rW'))
+inpo = cPickle.load(open('../data/WN-train-rel.pkl', 'rW'))
+
+
+
+
+W = tf.Variable(entityEmbeddings)
+R = tf.Variable(relationEmbeddings)
+E = tf.Variable(wordEmbeddings)
+
+hk = tf.placeholder(tf.int32, [1])
+rk = tf.placeholder(tf.int32, [1])
+tk = tf.placeholder(tf.int32, [1])
+
+hw = tf.placeholder(tf.int32, [1])
+rw = tf.placeholder(tf.int32, [1])
+tw = tf.placeholder(tf.int32, [1])
+
+
+
+hkrow = tf.nn.embedding_lookup(W, hk)
+rkrow = tf.nn.embedding_lookup(R, rk)
+tkrow = tf.nn.embedding_lookup(W, tk)
+
+if(hw != -1):
+	hwrow = tf.nn.embedding_lookup(W, hw)
+if(tw != -1):
+	twrow = tf.nn.embedding_lookup(W, tw)
+
+distance = lambda h,r,t: tf.sub(tf.constant(7, dtype="float32"),
+    tf.mul(tf.constant(0.5, dtype="float32"),tf.reduce_sum(tf.pow(tf.sub(tf.add(h,r),t),2),1)))
+
+def if_true():
+  return tf.matmul(a, b)
+
+def if_false():
+  return 0
+
+tf.equal(x, y, name=None)
+if(hw != -1) and (tw != -1):
+	distance1 = distance(hwrow, rkrow, twrow)
+else:
+	distance1 = 0
+if(hw != -1):
+	distance2 = distance(hwrow, rkrow, tkrow)
+else:
+	distance2 = 0
+if(tw != -1):
+	distance3 = distance(hkrow, rkrow, twrow)
+else:
+	distance3 = 0
+
+totalDistance = distance1 + distance2 + distance3
+
+cost = tf.neg(tf.log(tf.sigmoid(totalDistance)))
+train_step = tf.train.GradientDescentOptimizer(0.1).minimize(cost)
+init = tf.initialize_all_variables()
+sess = tf.Session()
+sess.run(init)
+
+
+for i in range(100):
+    idx = random.sample(range(len(inpl)), 1)
+    #print inpl[idx[0]]
+    #print inpo[idx[0]]
+    #print inpr[idx[0]]
+    #idx = [10000]
+    I1 = 1
+    I2 = 1
+    I3 = 1
+    if(entityRevLoopup[inpl[idx[0]]] in word2vecDict):
+    	hw = word2vecDict[entityRevLoopup[inpl[idx[0]]]]
+    else:
+    	hw = 0
+    	I1 = 0
+    	I2 = 0
+
+    if(entityRevLoopup[inpr[idx[0]]] in word2vecDict):
+    	tw = word2vecDict[entityRevLoopup[inpr[idx[0]]]]
+    else:
+    	tw = 0
+    	I1 = 0
+    	I3 = 0
+
+
+    print 'Running with h:',inpl[idx[0]]
+    [_,c] = sess.run([train_step, cost], 
+        feed_dict={hk: [inpl[idx[0]]], rk: [inpo[idx[0]]], tk: [inpr[idx[0]]], hw:[hw], tw:[tw], I1:I1, I2:I2, I3:I3})
+    if i % 10:
+        print "Step {}, Cost {}".format(i,c)
+
+
+
+
+
+
+
+
+
+
+
+,
 wrotesize:
-TP2 - readBytes: 9
-TP3 - writeBytes: 9
-TP1 - wroteBytes:9
-Should have written: 9
-Inside Getattr
-Inside GetattrTriggering getattr for /test.txt
+TP2 - readBytes: 2966
+TP3 - writeBytes: 2966
+TP1 - wroteBytes:2966
+Should have written: 2966
+Inside GetattrTriggering getattr for /test.py
 Parent Path: /Parent - /
 
 Inside traverseToDir, traversing to: / : length: 1
 Comparing to / of length: 1the output of strcmp is: 0
 Returning rootTp1Parent - /
-File - test.txt
+File - test.py
 
 Will Invoke getDirPresentAtDir
 Searching for directory inside the directory: /Inside getFilePresentAtDir
 Searching for file inside the directory: /Inside the Loop
 
-Comparing the files: test.txt and test.txtFound File
-File Size: 10
+Comparing the files: test.py and test.pyFound File
+File Size: 2966
 
 Inside Access 
 
 
+
+Inside Access 
+
+
+Inside Getattr
+Inside Getattr
+Inside GetattrTriggering getattr for /.Trash
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.Trash-1000
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash-1000
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash-1000
+Going to return NULL
+Returning Error
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /.hidden
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .hidden
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .hidden
+Going to return NULL
+Returning Error
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /.Trash
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.Trash-1000
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash-1000
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash-1000
+Going to return NULL
+Returning Error
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /.Trash
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.Trash-1000
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash-1000
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash-1000
+Going to return NULL
+Returning Error
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /.Trash
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.Trash-1000
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash-1000
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash-1000
+Going to return NULL
+Returning Error
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /.Trash
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.Trash-1000
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash-1000
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash-1000
+Going to return NULL
+Returning Error
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /.Trash
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash
+Going to return NULL
+Returning Error
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /.Trash-1000
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1
+
+Inside Access 
+
+the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash-1000
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and .Trash-1000
+Going to return NULL
+Returning Error
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /test.py
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - test.py
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /Inside the Loop
+
+Comparing the files: test.py and test.pyFound File
+File Size: 2966
+Inside Getattr
 Inside OpenParent - /
 
 Inside traverseToDir, traversing to: / : length: 1
 Comparing to / of length: 1the output of strcmp is: 0
 Returning rootTp1Parent - /
-File - test.txt
+File - test.py
 Inside getFilePresentAtDir
 Searching for file inside the directory: /Inside the Loop
 
-Comparing the files: test.txt and test.txtReturned File as NULLInside Read
+Comparing the files: test.py and test.pyReturned File as NULLInside Read
 Inside OpenParent - /
 
 Inside traverseToDir, traversing to: / : length: 1
 Comparing to / of length: 1the output of strcmp is: 0
 Returning rootTp1Parent - /
-File - test.txt
+File - test.py
 Inside getFilePresentAtDir
 Searching for file inside the directory: /Inside the Loop
 
-Comparing the files: test.txt and test.txtReturned File as NULLInside pb_open
+Comparing the files: test.py and test.pyReturned File as NULLInside pb_open
 TP1
 Offset: 0
-TP2 - blocksReadAfterFirst: 3
+TP2 - blocksReadAfterFirst: 0
 TP3 - bytesToReadInLast: 0
-TP3 - bytesToReadInFirst: 1024
+TP3 - bytesToReadInFirst: 4096
 TP3 - offsetInBlock: 0
  TP3 - Inside Read: Starting Block: 0
-Trying to read: hahahaha
-Length of Temp Buf: 10
-Length of String: 11
+Trying to read: import tensorflow as tf
+from sklearn.datasets import load_boston
+import tensorflow as tf
+import numpy as np
+from sklearn.preprocessing import normalize
+import random as random
 
-TP2 - readBytes: 1024Length of String: 11
-Length of Temp Buf: 10
+import cPickle
 
-TP2 - readBytes: 2048Length of String: 21
-Length of String: 21
-Length of Temp Buf: 10
+wordEmbeddings = cPickle.load(open( "../data/word2vecEmbeddings.pkl", "rb"))
+word2vecDict = cPickle.load(open( "../data/word2vecDict.pkl", "rb"))
+#word2vecRevDict = cPickle.load(open( "../data/word2vecRevDict.pkl", "rb"))
 
-TP2 - readBytes: 3072Length of String: 31
-Length of String: 31
-Length of Temp Buf: 10
 
-TP2 - readBytes: 4096Length of String: 41
+entityEmbeddings = cPickle.load(open( "../data/entityEmbeddings.pkl", "rb"))
+relationEmbeddings = cPickle.load(open( "../data/relationEmbeddings.pkl", "rb"))
+entityLookup = cPickle.load(open( "../data/WN_synset2idx.pkl", "rb"))
+entityRevLoopup = cPickle.load(open( "../data/WN_idx2synset.pkl", "rb"))
 
-Read buf: xhahahaha
-hahahaha
-hahahaha
-hahahaha
-
-Length of buf: 41
+inpl = cPickle.load(open('../data/WN-train-lhs.pkl', 'rW'))
+inpr = cPickle.load(open('../data/WN-train-rhs.pkl', 'rW'))
+inpo = cPickle.load(open('../data/WN-train-rel.pkl', 'rW'))
+
+
+
+
+W = tf.Variable(entityEmbeddings)
+R = tf.Variable(relationEmbeddings)
+E = tf.Variable(wordEmbeddings)
+
+hk = tf.placeholder(tf.int32, [1])
+rk = tf.placeholder(tf.int32, [1])
+tk = tf.placeholder(tf.int32, [1])
+
+hw = tf.placeholder(tf.int32, [1])
+rw = tf.placeholder(tf.int32, [1])
+tw = tf.placeholder(tf.int32, [1])
+
+
+
+hkrow = tf.nn.embedding_lookup(W, hk)
+rkrow = tf.nn.embedding_lookup(R, rk)
+tkrow = tf.nn.embedding_lookup(W, tk)
+
+if(hw != -1):
+	hwrow = tf.nn.embedding_lookup(W, hw)
+if(tw != -1):
+	twrow = tf.nn.embedding_lookup(W, tw)
+
+distance = lambda h,r,t: tf.sub(tf.constant(7, dtype="float32"),
+    tf.mul(tf.constant(0.5, dtype="float32"),tf.reduce_sum(tf.pow(tf.sub(tf.add(h,r),t),2),1)))
+
+def if_true():
+  return tf.matmul(a, b)
+
+def if_false():
+  return 0
+
+tf.equal(x, y, name=None)
+if(hw != -1) and (tw != -1):
+	distance1 = distance(hwrow, rkrow, twrow)
+else:
+	distance1 = 0
+if(hw != -1):
+	distance2 = distance(hwrow, rkrow, tkrow)
+else:
+	distance2 = 0
+if(tw != -1):
+	distance3 = distance(hkrow, rkrow, twrow)
+else:
+	distance3 = 0
+
+totalDistance = distance1 + distance2 + distance3
+
+cost = tf.neg(tf.log(tf.sigmoid(totalDistance)))
+train_step = tf.train.GradientDescentOptimizer(0.1).minimize(cost)
+init = tf.initialize_all_variables()
+sess = tf.Session()
+sess.run(init)
+
+
+for i in range(100):
+    idx = random.sample(range(len(inpl)), 1)
+    #print inpl[idx[0]]
+    #print inpo[idx[0]]
+    #print inpr[idx[0]]
+    #idx = [10000]
+    I1 = 1
+    I2 = 1
+    I3 = 1
+    if(entityRevLoopup[inpl[idx[0]]] in word2vecDict):
+    	hw = word2vecDict[entityRevLoopup[inpl[idx[0]]]]
+    else:
+    	hw = 0
+    	I1 = 0
+    	I2 = 0
+
+    if(entityRevLoopup[inpr[idx[0]]] in word2vecDict):
+    	tw = word2vecDict[entityRevLoopup[inpr[idx[0]]]]
+    else:
+    	tw = 0
+    	I1 = 0
+    	I3 = 0
+
+
+    print 'Running with h:',inpl[idx[0]]
+    [_,c] = sess.run([train_step, cost], 
+        feed_dict={hk: [inpl[idx[0]]], rk: [inpo[idx[0]]], tk: [inpr[idx[0]]], hw:[hw], tw:[tw], I1:I1, I2:I2, I3:I3})
+    if i % 10:
+        print "Step {}, Cost {}".format(i,c)
+
+
+
+
+
+
+
+
+
+
+
+Length of Temp Buf: 2966
+Length of String: 2967
+
+TP2 - readBytes: 4096
+Read buf: ximport tensorflow as tf
+from sklearn.datasets import load_boston
+import tensorflow as tf
+import numpy as np
+from sklearn.preprocessing import normalize
+import random as random
+
+import cPickle
+
+wordEmbeddings = cPickle.load(open( "../data/word2vecEmbeddings.pkl", "rb"))
+word2vecDict = cPickle.load(open( "../data/word2vecDict.pkl", "rb"))
+#word2vecRevDict = cPickle.load(open( "../data/word2vecRevDict.pkl", "rb"))
+
+
+entityEmbeddings = cPickle.load(open( "../data/entityEmbeddings.pkl", "rb"))
+relationEmbeddings = cPickle.load(open( "../data/relationEmbeddings.pkl", "rb"))
+entityLookup = cPickle.load(open( "../data/WN_synset2idx.pkl", "rb"))
+entityRevLoopup = cPickle.load(open( "../data/WN_idx2synset.pkl", "rb"))
+
+inpl = cPickle.load(open('../data/WN-train-lhs.pkl', 'rW'))
+inpr = cPickle.load(open('../data/WN-train-rhs.pkl', 'rW'))
+inpo = cPickle.load(open('../data/WN-train-rel.pkl', 'rW'))
+
+
+
+
+W = tf.Variable(entityEmbeddings)
+R = tf.Variable(relationEmbeddings)
+E = tf.Variable(wordEmbeddings)
+
+hk = tf.placeholder(tf.int32, [1])
+rk = tf.placeholder(tf.int32, [1])
+tk = tf.placeholder(tf.int32, [1])
+
+hw = tf.placeholder(tf.int32, [1])
+rw = tf.placeholder(tf.int32, [1])
+tw = tf.placeholder(tf.int32, [1])
+
+
+
+hkrow = tf.nn.embedding_lookup(W, hk)
+rkrow = tf.nn.embedding_lookup(R, rk)
+tkrow = tf.nn.embedding_lookup(W, tk)
+
+if(hw != -1):
+	hwrow = tf.nn.embedding_lookup(W, hw)
+if(tw != -1):
+	twrow = tf.nn.embedding_lookup(W, tw)
+
+distance = lambda h,r,t: tf.sub(tf.constant(7, dtype="float32"),
+    tf.mul(tf.constant(0.5, dtype="float32"),tf.reduce_sum(tf.pow(tf.sub(tf.add(h,r),t),2),1)))
+
+def if_true():
+  return tf.matmul(a, b)
+
+def if_false():
+  return 0
+
+tf.equal(x, y, name=None)
+if(hw != -1) and (tw != -1):
+	distance1 = distance(hwrow, rkrow, twrow)
+else:
+	distance1 = 0
+if(hw != -1):
+	distance2 = distance(hwrow, rkrow, tkrow)
+else:
+	distance2 = 0
+if(tw != -1):
+	distance3 = distance(hkrow, rkrow, twrow)
+else:
+	distance3 = 0
+
+totalDistance = distance1 + distance2 + distance3
+
+cost = tf.neg(tf.log(tf.sigmoid(totalDistance)))
+train_step = tf.train.GradientDescentOptimizer(0.1).minimize(cost)
+init = tf.initialize_all_variables()
+sess = tf.Session()
+sess.run(init)
+
+
+for i in range(100):
+    idx = random.sample(range(len(inpl)), 1)
+    #print inpl[idx[0]]
+    #print inpo[idx[0]]
+    #print inpr[idx[0]]
+    #idx = [10000]
+    I1 = 1
+    I2 = 1
+    I3 = 1
+    if(entityRevLoopup[inpl[idx[0]]] in word2vecDict):
+    	hw = word2vecDict[entityRevLoopup[inpl[idx[0]]]]
+    else:
+    	hw = 0
+    	I1 = 0
+    	I2 = 0
+
+    if(entityRevLoopup[inpr[idx[0]]] in word2vecDict):
+    	tw = word2vecDict[entityRevLoopup[inpr[idx[0]]]]
+    else:
+    	tw = 0
+    	I1 = 0
+    	I3 = 0
+
+
+    print 'Running with h:',inpl[idx[0]]
+    [_,c] = sess.run([train_step, cost], 
+        feed_dict={hk: [inpl[idx[0]]], rk: [inpo[idx[0]]], tk: [inpr[idx[0]]], hw:[hw], tw:[tw], I1:I1, I2:I2, I3:I3})
+    if i % 10:
+        print "Step {}, Cost {}".format(i,c)
+
+
+
+
+
+
+
+
+
+
+
+
+Length of buf: 2967
 TP1: readBytes: 4096
-Inside GetattrTriggering getattr for /test.txt
-Parent Path: /Parent - /
-
-Inside traverseToDir, traversing to: / : length: 1
-Comparing to / of length: 1the output of strcmp is: 0
-Returning rootTp1Parent - /
-File - test.txt
-
-Will Invoke getDirPresentAtDir
-Searching for directory inside the directory: /Inside getFilePresentAtDir
-Searching for file inside the directory: /Inside the Loop
-
-Comparing the files: test.txt and test.txtFound File
-File Size: 10
-Inside GetattrTriggering getattr for /test.txt
-Parent Path: /Parent - /
-
-Inside traverseToDir, traversing to: / : length: 1
-Comparing to / of length: 1the output of strcmp is: 0
-Returning rootTp1Parent - /
-File - test.txt
-
-Will Invoke getDirPresentAtDir
-Searching for directory inside the directory: /Inside getFilePresentAtDir
-Searching for file inside the directory: /Inside the Loop
-
-Comparing the files: test.txt and test.txtFound File
-File Size: 10
+TP2: readBytes: 2967
