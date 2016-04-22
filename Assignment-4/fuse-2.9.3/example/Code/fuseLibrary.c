@@ -7,6 +7,7 @@
 #include <syslog.h>
 
 #define FNSize 30
+#define NUMBlocks 10
 //gcc -w -g -Wall fuseLibraryTry.c `pkg-config fuse --cflags --libs` -o fuseLibraryTry
 
 
@@ -49,9 +50,9 @@ int initializeFileSystem()
 	root->fileinDir = NULL;
 	root->subdirectory = NULL;
 	root->siblingDirectory = NULL;
-	blocks = malloc(4096*sizeof(block));
+	blocks = malloc(NUMBlocks*sizeof(block));
 	syslog(LOG_INFO,"\nInitializing the blocks");
-	for(int i=0; i<4096; i++)
+	for(int i=0; i<NUMBlocks; i++)
 	{
 		blocks[i].status = 0;
 		blocks[i].nextBlock = NULL;
@@ -98,13 +99,15 @@ int freeSubsequentBlocks(int blockIndex)
 
 int getNextFreeBlockIndex()
 {
-	for(int i=0; i<4096; i++)
+	for(int i=0; i<NUMBlocks; i++)
 	{
 		if(blocks[i].status == 0)
 		{
 			printf("\n\n\nNext Free Block = %d", i);
 			return i;
 		}
+		else
+			printf("\nblock: %d not free", i);
 	}
 }
 
@@ -323,6 +326,63 @@ directory* getDirPresentAtDir(directory* currDirectory, char* dirName)
 	return NULL;
 }
 
+int pb_openfd(const char *path,struct fuse_file_info* fi)
+{
+	printf("\nInside Open");
+	file* oldFile;
+	file* newFile;
+	fflush(stdout);
+	char* parentPath = getParentPath(path);
+	if(parentPath == NULL)
+		return -ENOENT;
+
+	printf("Parent - %s\n", parentPath);
+	directory* currDirectory = traverseToDir(parentPath);
+	if(currDirectory == NULL)
+		return -ENOENT;
+	printf("Tp1");
+
+	char* fileName = getFileDirName(path);
+
+	printf("Parent - %s\n", parentPath);
+	printf("File - %s\n", fileName);
+
+	//printf("\nHere we are getting ready to create the new directory inside: %s", currDirectory->directoryName);
+	//fflush(stdout);
+
+	oldFile = getFilePresentAtDir(currDirectory, fileName);
+	printf("Returned File as NULL");
+	fflush(stdout);
+	if(oldFile == NULL)
+	{
+		//new file
+		
+		printf("\nCreating a new file here!");
+		fflush(stdout);
+		newFile = malloc(sizeof(file));
+		strcpy(newFile->fileName, fileName);
+		newFile->siblingFile = currDirectory->fileinDir;
+		currDirectory->fileinDir = newFile;
+		newFile->firstBlock = getNextFreeBlockIndex();
+		printf("Creating new file and allocating block: %d", newFile->firstBlock);
+		blocks[newFile->firstBlock].status = 1;
+		return newFile->firstBlock;
+		
+		//todo: get the next available block and allocate it to the file.
+	}
+	else
+	{
+		syslog(LOG_INFO, "\nReturing the old file descriptor");
+		return oldFile->firstBlock;
+		//we have the file. Lets send the index of the block
+	}
+
+
+
+	return -ENOENT;
+
+}
+
 int pb_open(const char *path,struct fuse_file_info* fi)
 {
 	printf("\nInside Open");
@@ -361,6 +421,7 @@ int pb_open(const char *path,struct fuse_file_info* fi)
 		newFile->siblingFile = currDirectory->fileinDir;
 		currDirectory->fileinDir = newFile;
 		newFile->firstBlock = getNextFreeBlockIndex();
+		printf("Creating new file and allocating block: %d", newFile->firstBlock);
 		blocks[newFile->firstBlock].status = 1;
 		return 0;
 		
@@ -491,19 +552,31 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 	block* currBlock;
 	currBlock = firstBlock;
 
+	printf("\nBefore Iterating: ");
+	printf("\nStart Block: %d", startBlock);
+	printf("\nOffset Blocks Required:%d", offsetBlocks);
 
 	for(int i=0; i<offsetBlocks; i++)
 	{
 		currBlock = &blocks[currBlock->nextBlock];
-		if(currBlock == NULL)
+		if(currBlock->nextBlock == NULL)
 		{
-			return -ENOENT;
+			printf("\n Need to allocate new block");
+			currBlock->nextBlock = getNextFreeBlockIndex();	
 		}
+		printf("\nIterating to block: %d", currBlock->nextBlock);
+		currBlock = &blocks[currBlock->nextBlock];
+		currBlock->status = 1;
+
 	}
 
 	//Now read the first block after the offset
 	printf("\nTP2 - blocksToWriteAfterFirst: %d", blocksToWriteAfterFirst);
 	printf("\nTP2 - bytesToWriteInLast: %d", bytesToWriteInLast);
+	printf("\n Offset: %d", offset);
+	printf("\n Count: %d", count);
+	printf("\n offsetBlocks: %d", offsetBlocks);
+	printf("\n offsetInFirstBlock: %d", offsetInFirstBlock);
 	printf("\n Offset: %d", offset);
 	printf("\n Count: %d", count);
 	printf("\nInside - Write: Starting Block: %d", startBlock);
@@ -524,7 +597,7 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 
 	}
 	//todo:free subsequent blocks
-	if(currBlock->nextBlock != NULL && blocks[currBlock->nextBlock].status != 0)
+	if(currBlock->nextBlock != NULL || blocks[currBlock->nextBlock].status != 0)
 		freeSubsequentBlocks(currBlock->nextBlock);
 	
 	printf("\nTP2 - readBytes: %d", wroteBytes);
@@ -570,7 +643,7 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 int pb_write(const char* path, char *buf, size_t size, off_t offset, struct fuse_file_info* fi)
 {
 	printf("\nInside Write\n");
-	int fd = pb_open(path,fi);
+	int fd = pb_openfd(path,fi);
 	printf("Inside pb_write");
 	fflush(stdout);
 	if(fd<0)
@@ -699,7 +772,7 @@ int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, str
 int pb_read(const char* path, char *buf, size_t size, off_t offset, struct fuse_file_info* fi)
 {
 	printf("Inside Read");
-	int fd = pb_open(path,fi);
+	int fd = pb_openfd(path,fi);
 	printf("Inside pb_open");
 	fflush(stdout);
 	if(fd<0)

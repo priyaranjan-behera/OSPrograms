@@ -523,7 +523,7 @@ int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, str
 	if(blocksToWriteAfterFirst == 0 && bytesToWriteInLast == 0)
 	{
 		free(tempBuf);
-		char* tempBuf = malloc(1024);
+		char* tempBuf = malloc(4096);
 		printf("\nTrying to read: %s", &currBlock->blockContent[offsetInBlock]);
 		memcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock],count);
 		printf("Length of Temp Buf: %d\n", strlen(tempBuf));
