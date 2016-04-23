@@ -67,8 +67,97 @@ int pb_open(const char *path, int oflags)
 }
 */
 
+
+directory* traverseToDir(char* path)
+{
+
+	printf("\nInside traverseToDir, traversing to: %s : length: %d", path, strlen(path));
+	printf("\nComparing to %s of length: %d", "/", strlen("/"));
+	fflush(stdout);
+	int flag;
+	directory *currDirectory;
+	directory* sibDirectory;
+	directory *newDirectory;
+	currDirectory = root;
+	printf("the output of strcmp is: %d", strcmp(path, "/"));
+	fflush(stdout);
+	if(strcmp(path,"/")==0)
+	{
+		printf("\nReturning root");
+		return currDirectory;
+	}
+	char *token = strtok(path, "/");
+	while(token) {
+		printf( "\nProcessing Token: %s", token);
+		fflush(stdout);
+		currDirectory = currDirectory->subdirectory;
+		if(currDirectory == NULL)
+		{
+			printf("\nHandled NULL currDirectory");
+			fflush(stdout);
+			return NULL;
+		}
+		flag = 0;
+		if(strcmp(currDirectory->directoryName, token) == 0)
+		{
+			flag = 1;
+		}
+		else
+		{
+
+			sibDirectory = currDirectory->siblingDirectory;
+			while(sibDirectory != NULL)
+			{
+				if(strcmp(sibDirectory->directoryName, token) == 0)
+				{
+					currDirectory = sibDirectory;
+					flag = 1;
+				}
+				sibDirectory = sibDirectory->siblingDirectory;
+			}
+			if(flag == 0)
+			{
+				printf("\nFailed to find folder");
+				//failure to find directory or file in the path, create the directory here.
+				return NULL;
+			}
+
+		}
+	    token = strtok(NULL, "/");
+	}
+	printf("\nreturning Current Directory:");
+	return currDirectory;
+}
+
+
 int pb_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info* fi)
 {
+	filler(buf, ".", NULL, 0);
+	filler(buf, "..", NULL, 0);
+
+	directory* parentDirectory;
+	directory* currDir;
+	file* currFile;
+
+	parentDirectory = traverseToDir(path);
+	if(parentDirectory==NULL)
+		return 0;
+
+	currDir = parentDirectory->subdirectory;
+	currFile = parentDirectory->fileinDir;
+
+	while(currDir!=NULL)
+	{
+		filler(buf,currDir->directoryName, NULL, 0);
+		currDir = currDir->siblingDirectory;
+	}
+
+	while(currFile!=NULL)
+	{
+		filler(buf, currFile->fileName, NULL, 0);
+		currFile = currFile->siblingFile;
+	}
+
 	printf("Inside Readdir");
 	return 0;
 }
@@ -176,66 +265,6 @@ void removeSpaces(char *str)
     str[count] = '\0';
 }
 
-directory* traverseToDir(char* path)
-{
-
-	printf("\nInside traverseToDir, traversing to: %s : length: %d", path, strlen(path));
-	printf("\nComparing to %s of length: %d", "/", strlen("/"));
-	fflush(stdout);
-	int flag;
-	directory *currDirectory;
-	directory* sibDirectory;
-	directory *newDirectory;
-	currDirectory = root;
-	printf("the output of strcmp is: %d", strcmp(path, "/"));
-	fflush(stdout);
-	if(strcmp(path,"/")==0)
-	{
-		printf("\nReturning root");
-		return currDirectory;
-	}
-	char *token = strtok(path, "/");
-	while(token) {
-		printf( "\nProcessing Token: %s", token);
-		fflush(stdout);
-		currDirectory = currDirectory->subdirectory;
-		if(currDirectory == NULL)
-		{
-			printf("\nHandled NULL currDirectory");
-			fflush(stdout);
-			return NULL;
-		}
-		flag = 0;
-		if(strcmp(currDirectory->directoryName, token) == 0)
-		{
-			flag = 1;
-		}
-		else
-		{
-
-			sibDirectory = currDirectory->siblingDirectory;
-			while(sibDirectory != NULL)
-			{
-				if(strcmp(sibDirectory->directoryName, token) == 0)
-				{
-					currDirectory = sibDirectory;
-					flag = 1;
-				}
-				sibDirectory = sibDirectory->siblingDirectory;
-			}
-			if(flag == 0)
-			{
-				printf("\nFailed to find folder");
-				//failure to find directory or file in the path, create the directory here.
-				return NULL;
-			}
-
-		}
-	    token = strtok(NULL, "/");
-	}
-	printf("\nreturning Current Directory:");
-	return currDirectory;
-}
 
 
 int pb_mkdir(const char *path, mode_t mode)
@@ -322,6 +351,37 @@ directory* getDirPresentAtDir(directory* currDirectory, char* dirName)
 			return travDirectory;
 		}
 		travDirectory = travDirectory->siblingDirectory;
+	}
+
+	return NULL;
+}
+
+int removeDirectoryFromDirectory(directory* currDirectory, char* dirName)
+{
+	directory* travDirectory = currDirectory->subdirectory;
+	directory* oldDir;
+	printf("\nSearching for directory inside the directory: %s", currDirectory->directoryName);
+	fflush(stdout);
+	if(currDirectory->subdirectory != NULL && strcmp(currDirectory->subdirectory->directoryName, dirName) == 0)
+	{
+		oldDir = currDirectory->subdirectory;
+		currDirectory->subdirectory = currDirectory->subdirectory->siblingDirectory;
+		free(oldDir);
+		return 0;
+	}
+	else
+	{
+		while(travDirectory->siblingDirectory != NULL)
+		{
+			printf("\nComparing the dirs: %s and %s", travDirectory->directoryName, dirName);
+			if(strcmp(travDirectory->siblingDirectory->directoryName, dirName)==0)
+			{
+				printf("Yes. Found it");
+				travDirectory->siblingDirectory = travDirectory->siblingDirectory->siblingDirectory;
+				return 0;
+			}
+			travDirectory = travDirectory->siblingDirectory;
+		}
 	}
 
 	return NULL;
@@ -538,6 +598,7 @@ int pb_rmdir(const char* path)
 	directory* foundDirectory;
 	directory* processingDir;
 	directory* oldDir;
+	directory* subDirectory;
 	fflush(stdout);
 	char* parentPath = getParentPath(path);
 	printf("\nParent Path: %s", parentPath);
@@ -546,8 +607,8 @@ int pb_rmdir(const char* path)
 		return -ENOENT;
 
 	printf("Parent - %s\n", parentPath);
-	directory* currDirectory = traverseToDir(parentPath);
-	if(currDirectory == NULL)
+	directory* parentDirectory = traverseToDir(parentPath);
+	if(parentDirectory == NULL)
 		return -ENOENT;
 	printf("Tp1");
 
@@ -557,10 +618,12 @@ int pb_rmdir(const char* path)
 	printf("File - %s\n", fileName);
 
 	printf("\nWill Invoke getDirPresentAtDir");
-	foundDirectory = getDirPresentAtDir(currDirectory, fileName);
+	foundDirectory = getDirPresentAtDir(parentDirectory, fileName);
+	processingDir = foundDirectory;
 	if(foundDirectory!=NULL)
 	{
-		processingDir = traverseToDir(path);
+		//processingDir = traverseToDir(path);
+		//deleting files inside the folder
 		while(processingDir->fileinDir!=NULL)
 		{
 
@@ -571,6 +634,8 @@ int pb_rmdir(const char* path)
 			printf("LOOP1");
 
 		}
+		//deleting the folders inside the folder
+		processingDir->subdirectory;
 		while(processingDir->subdirectory!=NULL)
 		{
 			strcpy(filePath, path);
@@ -580,10 +645,14 @@ int pb_rmdir(const char* path)
 			processingDir->subdirectory = processingDir->subdirectory->siblingDirectory;
 			printf("LOOP2");
 		}
-		oldDir = processingDir;
-		processingDir = processingDir->siblingDirectory;
-		free(oldDir);
+		//oldDir = processingDir;
+		//processingDir = processingDir->siblingDirectory;
+		//free(oldDir); //some error here. Skipping it for a while.
+		//parentDirectory->subdirectory = foundDirectory->siblingDirectory;
+		removeDirectoryFromDirectory(parentDirectory, fileName);
+		return 0;
 	}
+
 	
 	/*
 	printf("Creating new file: %s", path);
@@ -593,6 +662,7 @@ int pb_rmdir(const char* path)
 	*/
 	printf("Deleted the Folder");
 	free(filePath);
+	free(parentPath);
 	printf("Returning Error");
 	fflush(stdout);
 	return -ENOENT;

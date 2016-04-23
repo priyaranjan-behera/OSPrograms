@@ -1,0 +1,377 @@
+Initializing the variables
+Initializing the blocks
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /.Trash
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /.Trash-1000
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - .Trash-1000
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /hello
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - hello
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside MakeDir
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning root
+Inside GetattrTriggering getattr for /hello
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - hello
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /
+Comparing the dirs: hello and helloYes. Found it
+Found Dir
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /hello/how
+Parent Path: /helloParent - /hello
+
+Inside traverseToDir, traversing to: /hello : length: 6
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+returning Current Directory:Tp1Parent - /hello
+File - how
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: helloInside getFilePresentAtDir
+Searching for file inside the directory: hello
+Going to return NULL
+Returning Error
+Inside MakeDir
+Inside traverseToDir, traversing to: /hello : length: 6
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+returning Current Directory:
+Inside GetattrTriggering getattr for /hello/how
+Parent Path: /helloParent - /hello
+
+Inside traverseToDir, traversing to: /hello : length: 6
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+returning Current Directory:Tp1Parent - /hello
+File - how
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: hello
+Comparing the dirs: how and howYes. Found it
+Found Dir
+
+Inside Access 
+
+
+Inside GetattrTriggering getattr for /hello/how/are
+Parent Path: /hello/howParent - /hello/how
+
+Inside traverseToDir, traversing to: /hello/how : length: 10
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+Processing Token: how
+returning Current Directory:Tp1Parent - /hello
+File - are
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: howInside getFilePresentAtDir
+Searching for file inside the directory: how
+Going to return NULL
+Returning Error
+Inside MakeDir
+Inside traverseToDir, traversing to: /hello/how : length: 10
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+Processing Token: how
+returning Current Directory:
+Inside GetattrTriggering getattr for /hello/how/are
+Parent Path: /hello/howParent - /hello/how
+
+Inside traverseToDir, traversing to: /hello/how : length: 10
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+Processing Token: how
+returning Current Directory:Tp1Parent - /hello
+File - are
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: how
+Comparing the dirs: are and areYes. Found it
+Found Dir
+
+Inside Access 
+
+
+Inside Getattr
+
+Inside Access 
+
+
+Inside Getattr
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootInside Readdir
+Inside GetattrTriggering getattr for /hello
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - hello
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /
+Comparing the dirs: hello and helloYes. Found it
+Found Dir
+Inside traverseToDir, traversing to: /hello : length: 6
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+returning Current Directory:Inside Readdir
+Inside GetattrTriggering getattr for /hello/how
+Parent Path: /helloParent - /hello
+
+Inside traverseToDir, traversing to: /hello : length: 6
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+returning Current Directory:Tp1Parent - /hello
+File - how
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: hello
+Comparing the dirs: how and howYes. Found it
+Found Dir
+Inside traverseToDir, traversing to: /hello/how : length: 10
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+Processing Token: how
+returning Current Directory:Inside Readdir
+Inside GetattrTriggering getattr for /hello/how/are
+Parent Path: /hello/howParent - /hello/how
+
+Inside traverseToDir, traversing to: /hello/how : length: 10
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+Processing Token: how
+returning Current Directory:Tp1Parent - /hello
+File - are
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: how
+Comparing the dirs: are and areYes. Found it
+Found Dir
+Inside traverseToDir, traversing to: /hello/how/are : length: 14
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+Processing Token: how
+Processing Token: are
+returning Current Directory:Inside Readdir
+Inside Getattr
+Inside GetattrTriggering getattr for /hello
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - hello
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /
+Comparing the dirs: hello and helloYes. Found it
+Found Dir
+Inside traverseToDir, traversing to: /hello : length: 6
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+returning Current Directory:Inside Readdir
+Inside GetattrTriggering getattr for /hello
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - hello
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /
+Comparing the dirs: hello and helloYes. Found it
+Found Dir
+Inside traverseToDir, traversing to: /hello : length: 6
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+returning Current Directory:Inside Readdir
+Inside GetattrTriggering getattr for /hello/how
+Parent Path: /helloParent - /hello
+
+Inside traverseToDir, traversing to: /hello : length: 6
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+returning Current Directory:Tp1Parent - /hello
+File - how
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: hello
+Comparing the dirs: how and howYes. Found it
+Found Dir
+Inside traverseToDir, traversing to: /hello/how : length: 10
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+Processing Token: how
+returning Current Directory:Inside Readdir
+Inside GetattrTriggering getattr for /hello/how
+Parent Path: /helloParent - /hello
+
+Inside traverseToDir, traversing to: /hello : length: 6
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+returning Current Directory:Tp1Parent - /hello
+File - how
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: hello
+Comparing the dirs: how and howYes. Found it
+Found Dir
+Inside traverseToDir, traversing to: /hello/how : length: 10
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+Processing Token: how
+returning Current Directory:Inside Readdir
+Inside GetattrTriggering getattr for /hello/how/are
+Parent Path: /hello/howParent - /hello/how
+
+Inside traverseToDir, traversing to: /hello/how : length: 10
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+Processing Token: how
+returning Current Directory:Tp1Parent - /hello
+File - are
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: how
+Comparing the dirs: are and areYes. Found it
+Found Dir
+Inside traverseToDir, traversing to: /hello/how/are : length: 14
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+Processing Token: how
+Processing Token: are
+returning Current Directory:Inside ReaddirTriggering rmdir for /hello/how/are
+Parent Path: /hello/howParent - /hello/how
+
+Inside traverseToDir, traversing to: /hello/how : length: 10
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+Processing Token: how
+returning Current Directory:Tp1Parent - /hello
+File - are
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: how
+Comparing the dirs: are and areYes. Found it
+Searching for directory inside the directory: howTriggering rmdir for /hello/how
+Parent Path: /helloParent - /hello
+
+Inside traverseToDir, traversing to: /hello : length: 6
+Comparing to / of length: 1the output of strcmp is: 104
+Processing Token: hello
+returning Current Directory:Tp1Parent - /hello
+File - how
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: hello
+Comparing the dirs: how and howYes. Found it
+Searching for directory inside the directory: helloTriggering rmdir for /hello
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - hello
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /
+Comparing the dirs: hello and helloYes. Found it
+Searching for directory inside the directory: /
+Inside Getattr
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootInside Readdir
+Inside Getattr
+Inside Getattr
+Inside GetattrTriggering getattr for /hello
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - hello
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /hello
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - hello
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
+Inside GetattrTriggering getattr for /hello
+Parent Path: /Parent - /
+
+Inside traverseToDir, traversing to: / : length: 1
+Comparing to / of length: 1the output of strcmp is: 0
+Returning rootTp1Parent - /
+File - hello
+
+Will Invoke getDirPresentAtDir
+Searching for directory inside the directory: /Inside getFilePresentAtDir
+Searching for file inside the directory: /
+Going to return NULL
+Returning Error
