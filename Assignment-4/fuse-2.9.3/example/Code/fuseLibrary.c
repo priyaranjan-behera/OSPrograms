@@ -4,7 +4,6 @@
 #include <fuse.h>
 #include <string.h>
 #include <errno.h>
-#include <syslog.h>
 
 #define FNSize 30
 #define NUMBlocks 10
@@ -44,14 +43,14 @@ directoryMap dm[100];
 
 int initializeFileSystem()
 {
-	syslog(LOG_INFO, "Initializing the variables");
+	printf("Initializing the variables");
 	root = malloc(sizeof(directory));
 	strcpy(root->directoryName,"/");
 	root->fileinDir = NULL;
 	root->subdirectory = NULL;
 	root->siblingDirectory = NULL;
 	blocks = malloc(NUMBlocks*sizeof(block));
-	syslog(LOG_INFO,"\nInitializing the blocks");
+	printf("\nInitializing the blocks");
 	for(int i=0; i<NUMBlocks; i++)
 	{
 		blocks[i].status = 0;
@@ -86,11 +85,11 @@ int freeSubsequentBlocks(int blockIndex)
 	int currBlock, nextBlock;
 	currBlock = blockIndex;
 
-	while(blocks[currBlock].status != 0)
+	while(currBlock > -1 && blocks[currBlock].status != 0)
 	{
 		nextBlock = blocks[currBlock].nextBlock;
 		free(blocks[currBlock].blockContent);
-		blocks[currBlock].blockContent = malloc(4096);
+		blocks[currBlock].blockContent = malloc(4096*sizeof(char));
 		blocks[currBlock].status = 0;
 		blocks[currBlock].nextBlock = -1;
 		currBlock = nextBlock;
@@ -110,6 +109,7 @@ int getNextFreeBlockIndex()
 		else
 			printf("\nblock: %d not free", i);
 	}
+	return -1;
 }
 
 int pb_mknod(const char* path, mode_t mode, dev_t rdev)
@@ -313,7 +313,7 @@ directory* getDirPresentAtDir(directory* currDirectory, char* dirName)
 	directory* travDirectory = currDirectory->subdirectory;
 	printf("\nSearching for directory inside the directory: %s", currDirectory->directoryName);
 	fflush(stdout);
-	while(travDirectory)
+	while(travDirectory != NULL)
 	{
 		printf("\nComparing the dirs: %s and %s", travDirectory->directoryName, dirName);
 		if(strcmp(travDirectory->directoryName, dirName)==0)
@@ -365,16 +365,19 @@ int pb_openfd(const char *path,struct fuse_file_info* fi)
 		newFile->siblingFile = currDirectory->fileinDir;
 		currDirectory->fileinDir = newFile;
 		newFile->firstBlock = getNextFreeBlockIndex();
+		if(newFile->firstBlock == -1)
+			return -ENOBUFS;
 		printf("Creating new file and allocating block: %d", newFile->firstBlock);
 		fflush(stdout);
 		blocks[newFile->firstBlock].status = 1;
+		blocks[newFile->firstBlock].nextBlock = -1;
 		return newFile->firstBlock;
 		
 		//todo: get the next available block and allocate it to the file.
 	}
 	else
 	{
-		syslog(LOG_INFO, "\nReturing the old file descriptor");
+		printf("\nReturing the old file descriptor");
 		return oldFile->firstBlock;
 		//we have the file. Lets send the index of the block
 	}
@@ -423,15 +426,18 @@ int pb_open(const char *path,struct fuse_file_info* fi)
 		newFile->siblingFile = currDirectory->fileinDir;
 		currDirectory->fileinDir = newFile;
 		newFile->firstBlock = getNextFreeBlockIndex();
+		if(newFile->firstBlock == -1)
+			return -ENOBUFS;
 		printf("Creating new file and allocating block: %d", newFile->firstBlock);
 		blocks[newFile->firstBlock].status = 1;
+		blocks[newFile->firstBlock].nextBlock = -1;
 		return 0;
 		
 		//todo: get the next available block and allocate it to the file.
 	}
 	else
 	{
-		syslog(LOG_INFO, "\nReturing the old file descriptor");
+		printf("\nReturing the old file descriptor");
 		return 0;
 		//we have the file. Lets send the index of the block
 	}
@@ -521,6 +527,144 @@ int pb_getattr(const char* path, struct stat* stbuf)
 
 }
 
+int pb_rmdir(const char* path)
+{
+
+
+
+	printf("Triggering rmdir for %s", path);
+	file* foundFile;
+	char* filePath = malloc(100);
+	directory* foundDirectory;
+	directory* processingDir;
+	directory* oldDir;
+	fflush(stdout);
+	char* parentPath = getParentPath(path);
+	printf("\nParent Path: %s", parentPath);
+	fflush(stdout);
+	if(parentPath == NULL)
+		return -ENOENT;
+
+	printf("Parent - %s\n", parentPath);
+	directory* currDirectory = traverseToDir(parentPath);
+	if(currDirectory == NULL)
+		return -ENOENT;
+	printf("Tp1");
+
+	char* fileName = getFileDirName(path);
+
+	printf("Parent - %s\n", parentPath);
+	printf("File - %s\n", fileName);
+
+	printf("\nWill Invoke getDirPresentAtDir");
+	foundDirectory = getDirPresentAtDir(currDirectory, fileName);
+	if(foundDirectory!=NULL)
+	{
+		processingDir = traverseToDir(path);
+		while(processingDir->fileinDir!=NULL)
+		{
+
+			strcpy(filePath, path);
+			strcat(filePath, "/");
+			strcat(filePath, processingDir->fileinDir->fileName);
+			pb_unlink(filePath);
+			printf("LOOP1");
+
+		}
+		while(processingDir->subdirectory!=NULL)
+		{
+			strcpy(filePath, path);
+			strcat(filePath, "/");
+			strcat(filePath, processingDir->subdirectory->directoryName);
+			pb_rmdir(filePath);
+			processingDir->subdirectory = processingDir->subdirectory->siblingDirectory;
+			printf("LOOP2");
+		}
+		oldDir = processingDir;
+		processingDir = processingDir->siblingDirectory;
+		free(oldDir);
+	}
+	
+	/*
+	printf("Creating new file: %s", path);
+	fflush(stdout);
+	struct fuse_file_info fi;
+	pb_open(path, &fi);
+	*/
+	printf("Deleted the Folder");
+	free(filePath);
+	printf("Returning Error");
+	fflush(stdout);
+	return -ENOENT;
+
+}
+
+
+int pb_unlink(const char* path)
+{
+
+	printf("Triggering unlink for %s", path);
+	file* prevFile;
+	file* currFile;
+	file* oldFile;
+	directory* processingDir;
+	fflush(stdout);
+	char* parentPath = getParentPath(path);
+	printf("\nParent Path: %s", parentPath);
+	fflush(stdout);
+	if(parentPath == NULL)
+		return -ENOENT;
+
+	printf("Parent - %s\n", parentPath);
+	processingDir = traverseToDir(parentPath);
+	if(processingDir == NULL)
+		return -ENOENT;
+
+	char* fileName = getFileDirName(path);
+
+	printf("Parent - %s\n", parentPath);
+	printf("File - %s\n", fileName);
+
+	if(processingDir->fileinDir!=NULL && strcmp(processingDir->fileinDir->fileName, fileName)==0)
+	{
+		oldFile = processingDir->fileinDir;
+		processingDir->fileinDir = processingDir->fileinDir->siblingFile;
+		free(oldFile);
+		return 0;
+
+	}
+	else if(processingDir->fileinDir!=NULL)
+	{
+		prevFile = processingDir->fileinDir;
+		currFile = prevFile->siblingFile;
+		while(currFile!=NULL)
+		{
+			if(strcmp(currFile->fileName, fileName)==0)
+			{
+				oldFile = currFile;
+				prevFile->siblingFile = currFile->siblingFile;
+				free(oldFile);
+				return 0;
+			}
+			prevFile = currFile;
+			currFile = currFile->siblingFile;
+		}
+	}
+
+	/*
+	printf("Creating new file: %s", path);
+	fflush(stdout);
+	struct fuse_file_info fi;
+	pb_open(path, &fi);
+	*/
+	printf("Returning Error");
+	fflush(stdout);
+	return -ENOENT;
+
+}
+
+
+
 int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
 {
 	int blocksToOffset, offsetInFirstBlock, wroteBytes, bytesToWriteInFirst;
@@ -560,17 +704,23 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 
 	for(int i=0; i<offsetBlocks; i++)
 	{
-		currBlock = &blocks[currBlock->nextBlock];
 		printf("Next Block listed here is: %d", currBlock->nextBlock);
 		if(currBlock->nextBlock == NULL || currBlock->nextBlock < 0)
 		{
 			printf("\n Need to allocate new block");
-			currBlock->nextBlock = getNextFreeBlockIndex();	
+			currBlock->nextBlock = getNextFreeBlockIndex();
+			if(currBlock->nextBlock == -1)
+				return -ENOBUFS;	
+			printf("\nIterating to block: %d", currBlock->nextBlock);
+			currBlock = &blocks[currBlock->nextBlock];
+			currBlock->nextBlock = -1;
 		}
-		printf("\nIterating to block: %d", currBlock->nextBlock);
-		currBlock = &blocks[currBlock->nextBlock];
+		else
+		{
+			printf("\nIterating to block: %d", currBlock->nextBlock);
+			currBlock = &blocks[currBlock->nextBlock];
+		}
 		currBlock->status = 1;
-
 	}
 
 	//Now read the first block after the offset
@@ -600,7 +750,7 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 
 	}
 	//todo:free subsequent blocks
-	if((currBlock->nextBlock != NULL && currBlock->nextBlock != -1) || blocks[currBlock->nextBlock].status != 0)
+	if((currBlock->nextBlock != NULL && currBlock->nextBlock != -1))
 		freeSubsequentBlocks(currBlock->nextBlock);
 	
 	printf("\nTP2 - readBytes: %d", wroteBytes);
@@ -611,10 +761,13 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 		printf("\nTP3 - readBytes: %d", wroteBytes);
 		fflush(stdout);
 		currBlock->nextBlock = getNextFreeBlockIndex();
+		if(currBlock->nextBlock == -1)
+			return -ENOBUFS;
 		printf("\nTP3 - readBytes: %d", wroteBytes);
 		fflush(stdout);
 		currBlock = &blocks[currBlock->nextBlock];
 		currBlock->status = 1;
+		currBlock->nextBlock = -1;
 		printf("\nTP3 - readBytes: %d", wroteBytes);
 		fflush(stdout);
 		memcpy(currBlock->blockContent,buf, 4096);
@@ -630,6 +783,8 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 	if(bytesToWriteInLast > 0)
 	{
 		currBlock->nextBlock = getNextFreeBlockIndex();
+		if(currBlock->nextBlock == -1)
+			return -ENOBUFS;
 		currBlock = &blocks[currBlock->nextBlock];
 		currBlock->status = 1;
 		memcpy(currBlock->blockContent,buf, bytesToWriteInLast); //todo
@@ -637,7 +792,7 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 		wroteBytes += bytesToWriteInLast;
 	}
 
-
+	currBlock->nextBlock = -1;
 	printf("\nTP1 - wroteBytes:%d", wroteBytes);
 	printf("\nShould have written: %d",count);
 	return wroteBytes;
@@ -852,6 +1007,8 @@ static struct fuse_operations pb_oper = {
 	.mknod 		= pb_mknod,
 	.init 		= pb_init,
 	.access 	= pb_access,
+	.unlink 	= pb_unlink,
+	.rmdir 		= pb_rmdir,
 };
 
 /*
