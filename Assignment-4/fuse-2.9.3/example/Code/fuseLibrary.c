@@ -6,7 +6,7 @@
 #include <errno.h>
 
 #define FNSize 30
-#define NUMBlocks 10
+#define BlockSize 4096
 //gcc -w -g -Wall fuseLibraryTry.c `pkg-config fuse --cflags --libs` -o fuseLibraryTry
 
 
@@ -40,22 +40,24 @@ typedef struct directoryMap{
 directory* root;
 block* blocks;
 directoryMap dm[100];
+int numBlocks;
 
-int initializeFileSystem()
+int initializeFileSystem(int fsSize)
 {
+	numBlocks = (fsSize*1024)/4;
 	printf("Initializing the variables");
 	root = malloc(sizeof(directory));
 	strcpy(root->directoryName,"/");
 	root->fileinDir = NULL;
 	root->subdirectory = NULL;
 	root->siblingDirectory = NULL;
-	blocks = malloc(NUMBlocks*sizeof(block));
+	blocks = malloc(numBlocks*sizeof(block));
 	printf("\nInitializing the blocks");
-	for(int i=0; i<NUMBlocks; i++)
+	for(int i=0; i<numBlocks; i++)
 	{
 		blocks[i].status = 0;
 		blocks[i].nextBlock = -1;
-		blocks[i].blockContent = malloc(4096);
+		blocks[i].blockContent = malloc(BlockSize);
 	}
 }
 
@@ -178,7 +180,7 @@ int freeSubsequentBlocks(int blockIndex)
 	{
 		nextBlock = blocks[currBlock].nextBlock;
 		free(blocks[currBlock].blockContent);
-		blocks[currBlock].blockContent = malloc(4096*sizeof(char));
+		blocks[currBlock].blockContent = malloc(BlockSize*sizeof(char));
 		blocks[currBlock].status = 0;
 		blocks[currBlock].nextBlock = -1;
 		currBlock = nextBlock;
@@ -188,15 +190,15 @@ int freeSubsequentBlocks(int blockIndex)
 
 int getNextFreeBlockIndex()
 {
-	for(int i=0; i<NUMBlocks; i++)
+	for(int i=0; i<numBlocks; i++)
 	{
 		if(blocks[i].status == 0)
 		{
-			printf("\n\n\nNext Free Block = %d", i);
+			//printf("\n\n\nNext Free Block = %d", i);
 			return i;
 		}
-		else
-			printf("\nblock: %d not free", i);
+		//else
+			//printf("\nblock: %d not free", i);
 	}
 	return -1;
 }
@@ -426,7 +428,10 @@ int pb_openfd(const char *path,struct fuse_file_info* fi)
 		currDirectory->fileinDir = newFile;
 		newFile->firstBlock = getNextFreeBlockIndex();
 		if(newFile->firstBlock == -1)
-			return -ENOBUFS;
+		{
+			pb_unlink(path);
+			return -ENOSPC;
+		}
 		printf("Creating new file and allocating block: %d", newFile->firstBlock);
 		fflush(stdout);
 		blocks[newFile->firstBlock].status = 1;
@@ -486,8 +491,10 @@ int pb_open(const char *path,struct fuse_file_info* fi)
 		newFile->siblingFile = currDirectory->fileinDir;
 		currDirectory->fileinDir = newFile;
 		newFile->firstBlock = getNextFreeBlockIndex();
-		if(newFile->firstBlock == -1)
-			return -ENOBUFS;
+		if(newFile->firstBlock == -1){
+			pb_unlink(path);
+			return -ENOSPC;
+		}
 		printf("Creating new file and allocating block: %d", newFile->firstBlock);
 		blocks[newFile->firstBlock].status = 1;
 		blocks[newFile->firstBlock].nextBlock = -1;
@@ -697,6 +704,7 @@ int pb_unlink(const char* path)
 
 	if(processingDir->fileinDir!=NULL && strcmp(processingDir->fileinDir->fileName, fileName)==0)
 	{
+		freeSubsequentBlocks(processingDir->fileinDir->firstBlock);
 		oldFile = processingDir->fileinDir;
 		processingDir->fileinDir = processingDir->fileinDir->siblingFile;
 		free(oldFile);
@@ -711,6 +719,7 @@ int pb_unlink(const char* path)
 		{
 			if(strcmp(currFile->fileName, fileName)==0)
 			{
+				freeSubsequentBlocks(currFile->firstBlock);
 				oldFile = currFile;
 				prevFile->siblingFile = currFile->siblingFile;
 				free(oldFile);
@@ -735,34 +744,34 @@ int pb_unlink(const char* path)
 
 
 
-int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
+int pb_writefile(const char* path, int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
 {
 	int blocksToOffset, offsetInFirstBlock, wroteBytes, bytesToWriteInFirst;
 	int bytesToWriteInLast, blocksToWriteAfterFirst, offsetInBlock, offsetBlocks;
 
 	//We will precalcute the offset blocks and the stats thereafter.
 
-	offsetBlocks = offset/4096;
-	offsetInFirstBlock = offset%4096;
-	if(count <= 4096 - offsetInFirstBlock)
+	offsetBlocks = offset/BlockSize;
+	offsetInFirstBlock = offset%BlockSize;
+	if(count <= BlockSize - offsetInFirstBlock)
 	{
 		bytesToWriteInFirst = count;
 		blocksToWriteAfterFirst = 0;
 
 	}	
 	else{
-		bytesToWriteInFirst = 4096 - offsetInFirstBlock;
-		blocksToWriteAfterFirst = (count - bytesToWriteInFirst)/4096;
+		bytesToWriteInFirst = BlockSize - offsetInFirstBlock;
+		blocksToWriteAfterFirst = (count - bytesToWriteInFirst)/BlockSize;
 	}
-	offsetInBlock = offset/4096;
-	if((bytesToWriteInFirst + offsetInFirstBlock) < 4096)
+	offsetInBlock = offset/BlockSize;
+	if((bytesToWriteInFirst + offsetInFirstBlock) < BlockSize)
 		bytesToWriteInLast = 0;
 	else
-		bytesToWriteInLast = count - (bytesToWriteInFirst + (4096*(blocksToWriteAfterFirst)));
+		bytesToWriteInLast = count - (bytesToWriteInFirst + (BlockSize*(blocksToWriteAfterFirst)));
 
 
 	wroteBytes = 0;
-	char* tempBuf = malloc(4096);
+	char* tempBuf = malloc(BlockSize);
 	printf("\nTP1");
 	block* firstBlock = &blocks[startBlock];
 	block* currBlock;
@@ -779,8 +788,10 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 		{
 			printf("\n Need to allocate new block");
 			currBlock->nextBlock = getNextFreeBlockIndex();
-			if(currBlock->nextBlock == -1)
-				return -ENOBUFS;	
+			if(currBlock->nextBlock == -1){
+				pb_unlink(path);
+				return -ENOSPC;	
+			}
 			printf("\nIterating to block: %d", currBlock->nextBlock);
 			currBlock = &blocks[currBlock->nextBlock];
 			currBlock->nextBlock = -1;
@@ -811,9 +822,9 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 	}
 	else
 	{
-		memcpy(&currBlock->blockContent[offsetInFirstBlock],buf, 4096-offsetInFirstBlock);
+		memcpy(&currBlock->blockContent[offsetInFirstBlock],buf, BlockSize-offsetInFirstBlock);
 		printf("\nTP2Wrote: %s\n wrote size: %d", &currBlock->blockContent[offsetInFirstBlock],strlen(&currBlock->blockContent[offsetInFirstBlock]));
-		wroteBytes = 4096-offsetInFirstBlock;
+		wroteBytes = BlockSize-offsetInFirstBlock;
 		buf += wroteBytes; //temp
 		printf("\nWrote here: %d", wroteBytes);
 	//Need to free all the blocks after this block first <free, malloc, status 0>
@@ -831,8 +842,10 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 		printf("\nTP3 - readBytes: %d", wroteBytes);
 		fflush(stdout);
 		currBlock->nextBlock = getNextFreeBlockIndex();
-		if(currBlock->nextBlock == -1)
-			return -ENOBUFS;
+		if(currBlock->nextBlock == -1){
+			pb_unlink(path);
+			return -ENOSPC;
+		}
 		printf("\nTP3 - readBytes: %d", wroteBytes);
 		fflush(stdout);
 		currBlock = &blocks[currBlock->nextBlock];
@@ -840,12 +853,12 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 		currBlock->nextBlock = -1;
 		printf("\nTP3 - readBytes: %d", wroteBytes);
 		fflush(stdout);
-		memcpy(currBlock->blockContent,buf, 4096);
+		memcpy(currBlock->blockContent,buf, BlockSize);
 		printf("\nTP3 - readBytes: %d", wroteBytes);
 		printf("\nWrote of Size: %d", strlen(currBlock->blockContent));
 		fflush(stdout);
-		wroteBytes += 4096;
-		buf += 4096;
+		wroteBytes += BlockSize;
+		buf += BlockSize;
 	}
 	printf("\nTP3 - writeBytes: %d", wroteBytes);
 	fflush(stdout);
@@ -853,8 +866,10 @@ int pb_writefile(int startBlock, const void *buf, size_t count, off_t offset, st
 	if(bytesToWriteInLast > 0)
 	{
 		currBlock->nextBlock = getNextFreeBlockIndex();
-		if(currBlock->nextBlock == -1)
-			return -ENOBUFS;
+		if(currBlock->nextBlock == -1){
+			pb_unlink(path);
+			return -ENOSPC;
+		}
 		currBlock = &blocks[currBlock->nextBlock];
 		currBlock->status = 1;
 		memcpy(currBlock->blockContent,buf, bytesToWriteInLast); //todo
@@ -876,39 +891,41 @@ int pb_write(const char* path, char *buf, size_t size, off_t offset, struct fuse
 	fflush(stdout);
 	if(fd<0)
 		return -ENOENT;
-	return pb_writefile(fd,buf,size,offset,fi);
+	return pb_writefile(path,fd,buf,size,offset,fi);
 }
 
 
 
 int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, struct fuse_file_info *fi)
 {
-	buf = (char*)malloc(count+10);
+	printf("\nSize to malloc: %d", count);
+	fflush(stdout);
+	//buf = (char*)malloc(count+1);
 
 	int blocksToOffset, offsetInFirstBlock, readBytes, bytesToWriteInFirst;
 	int bytesToWriteInLast, blocksToWriteAfterFirst, offsetInBlock, offsetBlocks;
 	//We will precalcute the offset blocks and the stats thereafter.
 
-	offsetBlocks = offset/4096;
-	offsetInFirstBlock = offset%4096;
-	if(count <= 4096 - offsetInFirstBlock)
+	offsetBlocks = offset/BlockSize;
+	offsetInFirstBlock = offset%BlockSize;
+	if(count <= BlockSize - offsetInFirstBlock)
 	{
 		bytesToWriteInFirst = count;
 		blocksToWriteAfterFirst = 0;
 
 	}	
 	else{
-		bytesToWriteInFirst = 4096 - offsetInFirstBlock;
-		blocksToWriteAfterFirst = (count - bytesToWriteInFirst)/4096;
+		bytesToWriteInFirst = BlockSize - offsetInFirstBlock;
+		blocksToWriteAfterFirst = (count - bytesToWriteInFirst)/BlockSize;
 	}
-	offsetInBlock = offset/4096;
-	if((bytesToWriteInFirst + offsetInFirstBlock) < 4096)
+	offsetInBlock = offset/BlockSize;
+	if((bytesToWriteInFirst + offsetInFirstBlock) < BlockSize)
 		bytesToWriteInLast = 0;
 	else
-		bytesToWriteInLast = count - (bytesToWriteInFirst + (4096*(blocksToWriteAfterFirst)));
+		bytesToWriteInLast = count - (bytesToWriteInFirst + (BlockSize*(blocksToWriteAfterFirst)));
 
 	readBytes = 0;
-	char* tempBuf = malloc(4096);
+	char* tempBuf = malloc(BlockSize);
 	printf("\nTP1");
 	block* firstBlock = &blocks[startBlock];
 	block* currBlock;
@@ -929,7 +946,7 @@ int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, str
 	if(blocksToWriteAfterFirst == 0 && bytesToWriteInLast == 0)
 	{
 		free(tempBuf);
-		char* tempBuf = malloc(4096);
+		char* tempBuf = malloc(BlockSize);
 		printf("\nTrying to read: %s", &currBlock->blockContent[offsetInBlock]);
 		memcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock],count);
 		printf("Length of Temp Buf: %d\n", strlen(tempBuf));
@@ -940,12 +957,12 @@ int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, str
 	else
 	{
 		free(tempBuf);
-		char* tempBuf = malloc(4096);
+		char* tempBuf = malloc(BlockSize);
 		printf("\nTrying to read: %s", &currBlock->blockContent[offsetInBlock]);
-		memcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock],4096-offsetInFirstBlock);
+		memcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock],BlockSize-offsetInFirstBlock);
 		printf("Length of Temp Buf: %d\n", strlen(tempBuf));
 		strcat(buf,tempBuf);
-		readBytes = 4096-offsetInFirstBlock; //temp
+		readBytes = BlockSize-offsetInFirstBlock; //temp
 	//Need to free all the blocks after this block first <free, malloc, status 0>
 
 		printf("Length of String: %d\n", strlen(buf));
@@ -960,12 +977,12 @@ int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, str
 	{
 		currBlock = &blocks[currBlock->nextBlock];
 		free(tempBuf);
-		tempBuf = malloc(4096);
+		tempBuf = malloc(BlockSize);
 		printf("Length of String: %d\n", strlen(buf));
-		memcpy(tempBuf,currBlock->blockContent,4096);
+		memcpy(tempBuf,currBlock->blockContent,BlockSize);
 		printf("Length of Temp Buf: %d\n", strlen(tempBuf));
 		strcat(buf,tempBuf);
-		readBytes += 4096;
+		readBytes += BlockSize;
 		printf("\nTP2 - readBytes: %d", readBytes);
 
 		printf("Length of String: %d\n", strlen(buf));
@@ -1061,11 +1078,13 @@ int initializeBlocks(block* startBlock, int fileSystemSize)
 
 }
 */
-
+/*
 void* pb_init(struct fuse_conn_info *conn)
 {
 	initializeFileSystem();
 }
+
+*/
 static struct fuse_operations pb_oper = {
 	.mkdir		= pb_mkdir,
 	.open 		= pb_open,
@@ -1075,7 +1094,7 @@ static struct fuse_operations pb_oper = {
 	.opendir 	= pb_opendir,
 	.readdir 	= pb_readdir,
 	.mknod 		= pb_mknod,
-	.init 		= pb_init,
+//	.init 		= pb_init,
 	.access 	= pb_access,
 	.unlink 	= pb_unlink,
 	.rmdir 		= pb_rmdir,
@@ -1123,5 +1142,6 @@ int main(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-	return fuse_main(argc, argv, &pb_oper, NULL);
+	initializeFileSystem(atoi(argv[argc-1]));
+	return fuse_main(argc-1, argv, &pb_oper, NULL);
 }
