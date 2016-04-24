@@ -1,0 +1,20 @@
+#
+#
+CC=gcc
+CFLAGS=-w -g -Wall -std=gnu99
+LIB = `pkg-config fuse --cflags --libs`
+
+# comment line below for Linux machines
+
+all: ramdisk
+
+ramdisk:	
+	$(CC) $(CFLAGS) fuseLibrary.c $(LIB) -o ramdisk
+
+
+clean:
+	\rm -f ramdisk
+
+tar:
+	cd ..; tar czvf ramdisk.tar.gz ramdisk/Makefile ramdisk/fuseLibrary.c ramdisk/postmatk-1.51.c ramdisk/benchmark.conf; cd ramdisk; mv ../ramdisk.tar.gz .
+
