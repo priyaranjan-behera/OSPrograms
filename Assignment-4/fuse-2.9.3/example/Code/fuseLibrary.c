@@ -148,6 +148,8 @@ int pb_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset
 	currDir = parentDirectory->subdirectory;
 	currFile = parentDirectory->fileinDir;
 
+	//printf("\nIterating inside parent: %s", parentDirectory->directoryName);
+	fflush(stdout);
 	while(currDir!=NULL)
 	{
 		filler(buf,currDir->directoryName, NULL, 0);
@@ -292,6 +294,8 @@ int pb_mkdir(const char *path, mode_t mode)
 	fflush(stdout);
 	directory* newDirectory = malloc(sizeof(directory));
 	strcpy(newDirectory->directoryName, fileName);
+	newDirectory->fileinDir = NULL;
+	newDirectory->subdirectory = NULL;
 	//printf("\nTp1");
 	fflush(stdout);
 	newDirectory->siblingDirectory = currDirectory->subdirectory;
@@ -634,8 +638,17 @@ int pb_rmdir(const char* path)
 		while(processingDir->fileinDir!=NULL)
 		{
 
+			//printf("\nParent Path: %s", path);
+			fflush(stdout);
 			strcpy(filePath, path);
 			strcat(filePath, "/");
+			if(processingDir->fileinDir->fileName == NULL)
+			{
+				//printf("\nHow is it null");
+				break;
+			}
+			//printf("\nFileName to Process: %s", processingDir->fileinDir->fileName);
+			fflush(stdout);
 			strcat(filePath, processingDir->fileinDir->fileName);
 			pb_unlink(filePath);
 			//printf("LOOP1");
@@ -908,18 +921,20 @@ int pb_readfile(const char* path, int startBlock, const void *buf, size_t count,
 	printf("\nCount given: %d", count);
 	fflush(stdout);
 	file* queriedFile = getFileFromPath(path);
-	printf("\nThe Size of the queried file is: %d", getFileSize(queriedFile));
-	printf("\nInitial Size of buffer: %d", strlen(buf));
-	printf("\nWhat is inside the buffer: %s", buf);
+	//printf("\nThe Size of the queried file is: %d", getFileSize(queriedFile));
+	//printf("\nInitial Size of buffer: %d", strlen(buf));
+	//printf("\nWhat is inside the buffer: %s", buf);
 	//allocating sufficient memory for buffer
 	int currFileSize = getFileSize(queriedFile);
 
 	if(offset + count > currFileSize)
 	{
 		count = currFileSize - offset;
+		//printf("\nAdjusted the count to : %d", count);
 	}
 	//buf = realloc(buf,count+10000);
-	printf("\nAdjusted Size of buffer: %d", strlen(buf));
+	//printf("\nAdjusted Size of buffer: %d", strlen(buf));
+
 
 	int blocksToOffset, offsetInFirstBlock, readBytes, bytesToWriteInFirst;
 	int bytesToWriteInLast, blocksToWriteAfterFirst, offsetInBlock, offsetBlocks;
@@ -943,14 +958,14 @@ int pb_readfile(const char* path, int startBlock, const void *buf, size_t count,
 	else
 		bytesToWriteInLast = count - (bytesToWriteInFirst + (BlockSize*(blocksToWriteAfterFirst)));
 
-	printf("\n*****PRINTING THE STATS BEFORE READING*****\n");
-	printf("\nTP2 - blocksToWriteAfterFirst: %d", blocksToWriteAfterFirst);
-	printf("\nTP2 - bytesToWriteInLast: %d", bytesToWriteInLast);
-	printf("\n Offset: %d", offset);
-	printf("\n Count: %d", count);
-	printf("\n offsetBlocks: %d", offsetBlocks);
-	printf("\n offsetInFirstBlock: %d", offsetInFirstBlock);
-	printf("\nInside - Write: Starting Block: %d", startBlock);
+	//printf("\n*****PRINTING THE STATS BEFORE READING*****\n");
+	//printf("\nTP2 - blocksToWriteAfterFirst: %d", blocksToWriteAfterFirst);
+	//printf("\nTP2 - bytesToWriteInLast: %d", bytesToWriteInLast);
+	//printf("\n Offset: %d", offset);
+	//printf("\n Count: %d", count);
+	//printf("\n offsetBlocks: %d", offsetBlocks);
+	//printf("\n offsetInFirstBlock: %d", offsetInFirstBlock);
+	//printf("\nInside - Write: Starting Block: %d", startBlock);
 
 	readBytes = 0;
 	char* tempBuf = malloc(BlockSize);
@@ -965,7 +980,7 @@ int pb_readfile(const char* path, int startBlock, const void *buf, size_t count,
 
 	for(int i=0; i<offsetBlocks; i++)
 	{
-		printf("\nSkipping OFFSET: %d", i);
+		//printf("\nSkipping OFFSET: %d", i);
 		if(currBlock->nextBlock == NULL || currBlock->nextBlock < 0)
 			return -EINVAL;
 		currBlock = &blocks[currBlock->nextBlock];
@@ -981,33 +996,35 @@ int pb_readfile(const char* path, int startBlock, const void *buf, size_t count,
 	//printf("\n Offset: %d", offset);
 	//printf("\n Count: %d", count);
 	//printf("\nInside - Write: Starting Block: %d", startBlock);
-	if(blocksToWriteAfterFirst == 0 && bytesToWriteInLast == 0 && count < BlockSize)
+	if(blocksToWriteAfterFirst == 0 && bytesToWriteInLast == 0 && count <= BlockSize)
 	{
 		free(tempBuf);
 		tempBuf = malloc(BlockSize);
-		printf("\nTrying to from only block", &currBlock->blockContent[offsetInBlock]);
-		memcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock],count);
+		//printf("\nTrying to from only block", &currBlock->blockContent[offsetInBlock]);
+		//printf("The Size of the block content: %d",  strlen(&currBlock->blockContent[offsetInBlock]));
 		//strcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock]);
-		printf("\nLength of Temp Buf: %d\n", strlen(tempBuf));
-		memcpy(buf,tempBuf,count);
+		//strcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock]);
+		//printf("\nLength of Temp Buf: %d\n", strlen(tempBuf));
+		strcpy(buf, &currBlock->blockContent[offsetInBlock]);
+		//memcpy(buf,tempBuf,count);
 		//strcpy(buf,tempBuf);
-		readBytes = count;
-		printf("\nLength of String: %d\n", strlen(buf));
+		readBytes = strlen(&currBlock->blockContent[offsetInBlock]) ;
+		//printf("\nLength of String: %d\n", strlen(buf));
 	}
 	else
 	{
 		free(tempBuf);
 		tempBuf = malloc(BlockSize);
-		printf("\nTrying to read from first of many block:", &currBlock->blockContent[offsetInBlock]);
+		//printf("\nTrying to read from first of many block:", &currBlock->blockContent[offsetInBlock]);
 		memcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock],BlockSize-offsetInFirstBlock);
 		//strcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock]);
-		printf("\nLength of Temp Buf: %d\n", strlen(tempBuf));
+		//printf("\nLength of Temp Buf: %d\n", strlen(tempBuf));
 		memcpy(buf,tempBuf,BlockSize-offsetInFirstBlock);
 		//strcpy(buf, tempBuf);
 		readBytes = BlockSize-offsetInFirstBlock; //temp
 	//Need to free all the blocks after this block first <free, malloc, status 0>
 
-		printf("\nLength of String: %d\n", strlen(buf));
+		//printf("\nLength of String: %d\n", strlen(buf));
 
 	}
 	
@@ -1017,11 +1034,11 @@ int pb_readfile(const char* path, int startBlock, const void *buf, size_t count,
 	//Now all the full blocks to be written
 	for(int i = 0; i<blocksToWriteAfterFirst; i++)
 	{
-		printf("\nReading from full blocks");
-		printf("\nWill call malloc for tempbuf of size: %d", BlockSize);
+		//printf("\nReading from full blocks");
+		//printf("\nWill call malloc for tempbuf of size: %d", BlockSize);
 		fflush(stdout);
 		if(currBlock->nextBlock == NULL || currBlock->nextBlock < 0){
-			printf("\nCould not find further block");
+			//printf("\nCould not find further block");
 			fflush(stdout);
 			return readBytes;
 		}
@@ -1033,11 +1050,11 @@ int pb_readfile(const char* path, int startBlock, const void *buf, size_t count,
 		//printf("Length of String: %d\n", strlen(buf));
 		memcpy(tempBuf,currBlock->blockContent,BlockSize);
 		//strcpy(tempBuf,currBlock->blockContent);
-		printf("\nLength of Temp Buf: %d\n", strlen(tempBuf));
-		printf("\nBefore: Length of String: %d\n", strlen(buf));
+		//printf("\nLength of Temp Buf: %d\n", strlen(tempBuf));
+		//printf("\nBefore: Length of String: %d\n", strlen(buf));
 		fflush(stdout);
 		memcpy(buf+readBytes,tempBuf,BlockSize);
-		printf("\nAfter: Length of String: %d\n", strlen(buf));
+		//printf("\nAfter: Length of String: %d\n", strlen(buf));
 		//strcat(buf,tempBuf);
 		readBytes += BlockSize;
 		//printf("TP2 - readBytes: %d", readBytes);
@@ -1048,7 +1065,7 @@ int pb_readfile(const char* path, int startBlock, const void *buf, size_t count,
 	//this is the last block
 	if(bytesToWriteInLast > 0)
 	{
-		printf("/nLast Block Reading:");
+		//printf("\nLast Block Reading:");
 		if(currBlock->nextBlock == NULL || currBlock->nextBlock < 0)
 			return -EINVAL;
 		currBlock = &blocks[currBlock->nextBlock];
@@ -1056,14 +1073,15 @@ int pb_readfile(const char* path, int startBlock, const void *buf, size_t count,
 		tempBuf = malloc(bytesToWriteInLast);
 		memcpy(tempBuf,currBlock->blockContent,bytesToWriteInLast);
 		//strcpy(tempBuf,currBlock->blockContent);
-		printf("\nContent at last block: ", currBlock->blockContent);
-		printf("\nLength of Temp Buf: %d\n", strlen(tempBuf));
-		printf("\nValue of bytesToWriteInLast: %d",bytesToWriteInLast);
+		//printf("\nContent at last block: ", currBlock->blockContent);
+		//printf("\nLength of Temp Buf: %d\n", strlen(tempBuf));
+		//printf("\nValue of bytesToWriteInLast: %d",bytesToWriteInLast);
 		//strcat(buf,tempBuf);
 		memcpy(buf+readBytes,tempBuf,strlen(tempBuf));
 		readBytes += bytesToWriteInLast;
 
-		printf("Length of String: %d\n", strlen(buf));
+		//printf("Length of String: %d\n", strlen(buf));
+		fflush(stdout);
 	}
 	
 
@@ -1073,7 +1091,7 @@ int pb_readfile(const char* path, int startBlock, const void *buf, size_t count,
 	//strcat(buf,"\0");
 	//change readbytes if you face problem
 	//readBytes = strlen(buf);
-	//printf("\nTP2: readBytes: %d", readBytes);
+	printf("\nReturing: readBytes: %d", readBytes);
 	return readBytes;
 }
 
@@ -1205,6 +1223,10 @@ int main(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
+	if(argc < 3)
+	{
+		printf("Usage: ramdisk [options] <mount path> <size of fs in MB>");
+	}
 	initializeFileSystem(atoi(argv[argc-1]));
 	return fuse_main(argc-1, argv, &pb_oper, NULL);
 }
