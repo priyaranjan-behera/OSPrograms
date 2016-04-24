@@ -931,18 +931,27 @@ int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, str
 	block* currBlock;
 	currBlock = firstBlock;
 
+	printf("\nBefore Iterating: ");
+	printf("\nStart Block: %d", startBlock);
+	printf("\nOffset Blocks Required:%d", offsetBlocks);
+
 	for(int i=0; i<offsetBlocks; i++)
 	{
+		if(currBlock->nextBlock == NULL || currBlock->nextBlock < 0)
+			return -EINVAL;
 		currBlock = &blocks[currBlock->nextBlock];
 	}
 
 	//Now read the first block after the offset
-	printf("\nOffset: %d", offset);
-	printf("\nTP2 - blocksReadAfterFirst: %d", blocksToWriteAfterFirst);
-	printf("\nTP3 - bytesToReadInLast: %d", bytesToWriteInLast);
-	printf("\nTP3 - bytesToReadInFirst: %d", bytesToWriteInFirst);
-	printf("\nTP3 - offsetInBlock: %d", offsetInBlock);
-	printf("\n TP3 - Inside Read: Starting Block: %d", startBlock);
+	printf("\nTP2 - blocksToWriteAfterFirst: %d", blocksToWriteAfterFirst);
+	printf("\nTP2 - bytesToWriteInLast: %d", bytesToWriteInLast);
+	printf("\n Offset: %d", offset);
+	printf("\n Count: %d", count);
+	printf("\n offsetBlocks: %d", offsetBlocks);
+	printf("\n offsetInFirstBlock: %d", offsetInFirstBlock);
+	printf("\n Offset: %d", offset);
+	printf("\n Count: %d", count);
+	printf("\nInside - Write: Starting Block: %d", startBlock);
 	if(blocksToWriteAfterFirst == 0 && bytesToWriteInLast == 0)
 	{
 		free(tempBuf);
@@ -957,7 +966,7 @@ int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, str
 	else
 	{
 		free(tempBuf);
-		char* tempBuf = malloc(BlockSize);
+		tempBuf = malloc(BlockSize);
 		printf("\nTrying to read: %s", &currBlock->blockContent[offsetInBlock]);
 		memcpy(tempBuf,&currBlock->blockContent[offsetInFirstBlock],BlockSize-offsetInFirstBlock);
 		printf("Length of Temp Buf: %d\n", strlen(tempBuf));
@@ -975,6 +984,8 @@ int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, str
 	//Now all the full blocks to be written
 	for(int i = 0; i<blocksToWriteAfterFirst; i++)
 	{
+		if(currBlock->nextBlock == NULL || currBlock->nextBlock < 0)
+			return -EINVAL;
 		currBlock = &blocks[currBlock->nextBlock];
 		free(tempBuf);
 		tempBuf = malloc(BlockSize);
@@ -991,6 +1002,8 @@ int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, str
 	//this is the last block
 	if(bytesToWriteInLast > 0)
 	{
+		if(currBlock->nextBlock == NULL || currBlock->nextBlock < 0)
+			return -EINVAL;
 		currBlock = &blocks[currBlock->nextBlock];
 		free(tempBuf);
 		tempBuf = malloc(bytesToWriteInLast);
@@ -1007,9 +1020,9 @@ int pb_readfile(int startBlock, const void *buf, size_t count, off_t offset, str
 	printf("\nRead buf: %s", buf);
 	printf("\nLength of buf: %d", strlen(buf));
 	printf("\nTP1: readBytes: %d", readBytes);
-	strcat(buf,"\0");
+	//strcat(buf,"\0");
 	//change readbytes if you face problem
-	readBytes = strlen(buf);
+	//readBytes = strlen(buf);
 	printf("\nTP2: readBytes: %d", readBytes);
 	return readBytes;
 }
@@ -1018,7 +1031,7 @@ int pb_read(const char* path, char *buf, size_t size, off_t offset, struct fuse_
 {
 	printf("Inside Read");
 	int fd = pb_openfd(path,fi);
-	printf("Inside pb_open");
+	printf("Inside pb_read");
 	fflush(stdout);
 	if(fd<0)
 		return -ENOENT;
